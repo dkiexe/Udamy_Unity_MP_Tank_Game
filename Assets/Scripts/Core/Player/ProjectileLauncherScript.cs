@@ -30,8 +30,8 @@ public class ProjectileLauncherScript : NetworkBehaviour
     {
         if (!IsOwner) return;
         if (!shouldFire) return;
-        SpawnDummyProjectile(projectileSpawnPoint.position, projectileSpawnPoint.up);
         PrimaryFireServerRpc(projectileSpawnPoint.position, projectileSpawnPoint.up);
+        SpawnDummyProjectile(projectileSpawnPoint.position, projectileSpawnPoint.up);
     }
 
     private void SpawnDummyProjectile(Vector2 spawnPos, Vector3 direction)

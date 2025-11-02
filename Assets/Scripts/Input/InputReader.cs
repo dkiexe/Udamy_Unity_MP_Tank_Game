@@ -40,6 +40,6 @@ public class InputReader : ScriptableObject, IPlayerActions
 
     public void OnPrimaryFire(InputAction.CallbackContext context)
     {
-        //throw new NotImplementedException();
+        PrimaryFireEvent?.Invoke(context.performed);
     }
 }
