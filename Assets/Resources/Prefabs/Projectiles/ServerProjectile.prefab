@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3776938865246945272, guid: 804f19a147c3f2d42be23e95ed5f9861, type: 3}
       propertyPath: m_Name
-      value: ProjectileBase Variant
+      value: ServerProjectile
       objectReference: {fileID: 0}
     - target: {fileID: 6882840270168287762, guid: 804f19a147c3f2d42be23e95ed5f9861, type: 3}
       propertyPath: m_LocalPosition.x
@@ -55,5 +55,26 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3776938865246945272, guid: 804f19a147c3f2d42be23e95ed5f9861, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -8243059385094214264}
   m_SourcePrefab: {fileID: 100100000, guid: 804f19a147c3f2d42be23e95ed5f9861, type: 3}
+--- !u!1 &5212311801083937568 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3776938865246945272, guid: 804f19a147c3f2d42be23e95ed5f9861, type: 3}
+  m_PrefabInstance: {fileID: 8953076982879780056}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &-8243059385094214264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5212311801083937568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82b5f4d67da6151409a3b4c7f9cce121, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ContactDamageDealer
+  damage: 20

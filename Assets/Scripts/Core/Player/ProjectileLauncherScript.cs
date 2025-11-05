@@ -84,6 +84,11 @@ public class ProjectileLauncherScript : NetworkBehaviour
 
         // this line insures the player wont shoot itself
         Physics2D.IgnoreCollision(playerCollider, projectileIntance.GetComponent<Collider2D>());
+
+        if (projectileIntance.TryGetComponent<ContactDamageDealer>(out ContactDamageDealer damageDealerObj))
+        {
+            damageDealerObj.SetOwner(this.OwnerClientId);
+        }
         
         if (projectileIntance.TryGetComponent<Rigidbody2D>(out Rigidbody2D RB2D))
         {
