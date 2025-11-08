@@ -2,7 +2,7 @@
 - Project name: MultiPlayerTanks
 - Unity version: Unity 6000.2.9f1
 - Active game object:
-  - Name: Player(Clone)
+  - Name: CoinSpawner
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->
