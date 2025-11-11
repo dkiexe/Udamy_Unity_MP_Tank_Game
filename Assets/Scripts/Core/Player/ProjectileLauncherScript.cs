@@ -6,6 +6,7 @@ public class ProjectileLauncherScript : NetworkBehaviour
 {
     [Header("References")]
     [SerializeField] private InputReader inputReader;
+    [SerializeField] private CoinWallet wallet;
     [SerializeField] private Transform projectileSpawnPoint;
     [SerializeField] private GameObject ServerProjectilePrefab;
     [SerializeField] private GameObject ClientProjectilePrefab;
@@ -16,9 +17,10 @@ public class ProjectileLauncherScript : NetworkBehaviour
     [SerializeField] private float ProjectileSpeed = 5f;
     [SerializeField] private float fireRate;
     [SerializeField] private float muzzleFlashDuration;
+    [SerializeField] private int CostToFire = 10;
 
     private bool shouldFire;
-    private float previousFireTime;
+    private float timer;
     private float muzzleFlashTimer;
 
     public override void OnNetworkSpawn()
@@ -42,13 +44,20 @@ public class ProjectileLauncherScript : NetworkBehaviour
         }
 
         if (!IsOwner) return;
+
+        if (timer > 0) timer -= Time.deltaTime;
+
+        // Given to us by an event
         if (!shouldFire) return;
+        
         // here we are trusting the client to calculate his time to fire.
-        if (Time.time < (1 / fireRate + previousFireTime)) return;
+        if (timer > 0) return;
+
+        if (wallet.TotalCoins.Value < CostToFire) return;
 
         PrimaryFireServerRpc(projectileSpawnPoint.position, projectileSpawnPoint.up);
         SpawnDummyProjectile(projectileSpawnPoint.position, projectileSpawnPoint.up);
-        previousFireTime = Time.time;
+        timer = 1 / fireRate;
     }
 
     private void SpawnDummyProjectile(Vector2 spawnPos, Vector3 direction)
@@ -75,6 +84,10 @@ public class ProjectileLauncherScript : NetworkBehaviour
     [ServerRpc] // this is how you make Remote Procedure Calls(RPC) to the server.
     private void PrimaryFireServerRpc(Vector2 spawnPos, Vector3 direction)
     {
+        if (wallet.TotalCoins.Value < CostToFire) return;
+
+        wallet.SpendCoins(CostToFire);
+
         GameObject projectileIntance = Instantiate(
             ServerProjectilePrefab,
             position: spawnPos,
