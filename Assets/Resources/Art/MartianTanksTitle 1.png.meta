@@ -1,0 +1,403 @@
+fileFormatVersion: 2
+guid: 50399eed22e468e428783fc7860b9988
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 1878271348601240645
+    second: MartianTanksTitle 1_0
+  - first:
+      213: -232164813591726010
+    second: MartianTanksTitle 1_1
+  - first:
+      213: -1455233549439811121
+    second: MartianTanksTitle 1_2
+  - first:
+      213: -6400340351548653913
+    second: MartianTanksTitle 1_3
+  - first:
+      213: -6876746325789457117
+    second: MartianTanksTitle 1_4
+  - first:
+      213: -5022128467271244856
+    second: MartianTanksTitle 1_5
+  - first:
+      213: -395573532034504293
+    second: MartianTanksTitle 1_6
+  - first:
+      213: 5196452762294139959
+    second: MartianTanksTitle 1_7
+  - first:
+      213: -8673095033641312371
+    second: MartianTanksTitle 1_8
+  - first:
+      213: 2150874335492441732
+    second: MartianTanksTitle 1_9
+  - first:
+      213: -5058607307131833695
+    second: MartianTanksTitle 1_10
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: MartianTanksTitle 1_0
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 7
+        width: 91
+        height: 83
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54cbb2d07d5f01a10800000000000000
+      internalID: 1878271348601240645
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MartianTanksTitle 1_1
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 14
+        width: 59
+        height: 74
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6483584055f27ccf0800000000000000
+      internalID: -232164813591726010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MartianTanksTitle 1_2
+      rect:
+        serializedVersion: 2
+        x: 157
+        y: 7
+        width: 125
+        height: 93
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc1c8640cc8fdcbe0800000000000000
+      internalID: -1455233549439811121
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MartianTanksTitle 1_3
+      rect:
+        serializedVersion: 2
+        x: 282
+        y: 73
+        width: 23
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7aef7585c5c6d27a0800000000000000
+      internalID: -6400340351548653913
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MartianTanksTitle 1_4
+      rect:
+        serializedVersion: 2
+        x: 310
+        y: 14
+        width: 59
+        height: 74
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 325c8d8b6a3e090a0800000000000000
+      internalID: -6876746325789457117
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MartianTanksTitle 1_5
+      rect:
+        serializedVersion: 2
+        x: 369
+        y: 11
+        width: 66
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c3abe374c0dd4ab0800000000000000
+      internalID: -5022128467271244856
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MartianTanksTitle 1_6
+      rect:
+        serializedVersion: 2
+        x: 463
+        y: 13
+        width: 61
+        height: 74
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b99698ce7f3a28af0800000000000000
+      internalID: -395573532034504293
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MartianTanksTitle 1_7
+      rect:
+        serializedVersion: 2
+        x: 520
+        y: 14
+        width: 59
+        height: 74
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 73cb3ac51428d1840800000000000000
+      internalID: 5196452762294139959
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MartianTanksTitle 1_8
+      rect:
+        serializedVersion: 2
+        x: 579
+        y: 11
+        width: 66
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8fda98d40af2a780800000000000000
+      internalID: -8673095033641312371
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MartianTanksTitle 1_9
+      rect:
+        serializedVersion: 2
+        x: 651
+        y: 13
+        width: 109
+        height: 74
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4860883ffc079dd10800000000000000
+      internalID: 2150874335492441732
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MartianTanksTitle 1_10
+      rect:
+        serializedVersion: 2
+        x: 282
+        y: 13
+        width: 23
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a23630b4773cc9b0800000000000000
+      internalID: -5058607307131833695
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      MartianTanksTitle 1_0: 1878271348601240645
+      MartianTanksTitle 1_1: -232164813591726010
+      MartianTanksTitle 1_10: -5058607307131833695
+      MartianTanksTitle 1_2: -1455233549439811121
+      MartianTanksTitle 1_3: -6400340351548653913
+      MartianTanksTitle 1_4: -6876746325789457117
+      MartianTanksTitle 1_5: -5022128467271244856
+      MartianTanksTitle 1_6: -395573532034504293
+      MartianTanksTitle 1_7: 5196452762294139959
+      MartianTanksTitle 1_8: -8673095033641312371
+      MartianTanksTitle 1_9: 2150874335492441732
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
