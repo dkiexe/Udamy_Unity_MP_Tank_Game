@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class NewMonoBehaviourScript : MonoBehaviour
+public class SpwanOnDestroy : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private GameObject prefab;
