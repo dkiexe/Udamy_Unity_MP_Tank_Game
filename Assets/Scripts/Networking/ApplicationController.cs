@@ -25,10 +25,16 @@ public class ApplicationController : MonoBehaviour
         else
         {
             ClientSingelton clientSingelton = Instantiate(clientPrefab);
-            await clientSingelton.CreateClient();
+            bool authenticatedClient = await clientSingelton.CreateClient();
 
             HostSingelton hostSingelton = Instantiate(hostPrefab);
             hostSingelton.CreateHost();
+
+            if (authenticatedClient)
+            {
+                clientSingelton.GameManager.GoToMenu();
+            }
+            // in this course we didnt implement what were to happen if authentication failed.
         }
     }
 }
