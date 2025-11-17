@@ -1,0 +1,13 @@
+Unity Relay is a service provided by Unity Gaming Services (UGS) that facilitates multiplayer connectivity for games without requiring developers to manage dedicated game servers or handle complex network configurations like port forwarding or NAT traversal.
+
+*) Key aspects of Unity Relay:
+Peer-to-Peer (P2P) Connectivity through a Proxy: Instead of direct P2P connections, which can be problematic due to firewalls and network address translation (NAT), Unity Relay acts as a secure intermediary. Players connect to a Unity Relay server, which then routes data between them. This creates a "listen server" model where one player acts as the host and the others as clients, with the Relay server acting as a public endpoint reachable by all.
+
+*)Simplified Connection Process: Relay simplifies the connection process for players. The host creates a Relay allocation and receives a unique join code. This join code can then be shared with other players, who use it to connect to the same Relay server and join the host's game session.
+
+*)No Dedicated Game Servers Required: Relay eliminates the need for developers to provision and maintain dedicated game servers, which can significantly reduce development costs and infrastructure complexity, especially for games with a smaller number of concurrent players.
+Security and Privacy: By routing traffic through Relay servers, players' IP addresses are not directly exposed to each other, enhancing privacy and security. Relay also supports DTLS encryption for secure communication.
+
+*)Integration with Other UGS: Unity Relay is designed to work seamlessly with other Unity Gaming Services, such as Lobby for matchmaking and Unity Netcode solutions (Netcode for GameObjects, Netcode for Entities) for game state synchronization and data management.
+
+*)Focus on Data Transport: It is important to note that Relay's primary function is data transport. It does not handle game state management, synchronization of game objects, or other game-specific logic. These aspects are typically handled by other networking solutions like Unity Netcode

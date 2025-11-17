@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 6267b84de89b253488f7add0c8defb63
+guid: ef35de5eed4424640b8ee9aa964baa84
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6812502098779842150
-    second: GameStructureWithUGS_0
+      213: 2831932960597443164
+    second: Screenshot 2025-11-17 161551_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: GameStructureWithUGS_0
+      name: Screenshot 2025-11-17 161551_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 1915
-        height: 941
+        width: 1802
+        height: 919
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 666206d809eda8e50800000000000000
-      internalID: 6812502098779842150
+      spriteID: c528120060c0d4720800000000000000
+      internalID: 2831932960597443164
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      GameStructureWithUGS_0: 6812502098779842150
+      Screenshot 2025-11-17 161551_0: 2831932960597443164
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

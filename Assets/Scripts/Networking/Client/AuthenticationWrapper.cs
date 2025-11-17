@@ -40,14 +40,14 @@ public static class AuthenticationWrapper
                     break;
                 }
             }
-            catch (AuthenticationException ex1) // Authentication fail server side
+            catch (AuthenticationException authException) // Authentication fail server side
             {
-                Debug.LogError(ex1.Message);
+                Debug.LogError(authException.Message);
                 AuthState = Authstate.Error;
             }
-            catch (RequestFailedException ex2) // no internet exception catch
+            catch (RequestFailedException requestException) // no internet exception catch
             {
-                Debug.LogError(ex2.Message);
+                Debug.LogError(requestException.Message);
                 AuthState = Authstate.Error;
             }
             reTries++;
