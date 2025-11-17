@@ -14,7 +14,7 @@ public class ClientGameManager
         await UnityServices.InitializeAsync();
 
         // now we do our own anonimus player authentication using UGS ( unity game services )
-        Authstate AuthState = await AuthenticationWrapper.DoAuth();
+        Authstate AuthState = await AuthenticationWrapper.DoAuth(5);
 
         if (AuthState == Authstate.Authenticated) return true; // returns true if the auth was a succsess
         return false; // returns false if the auth was failed

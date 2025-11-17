@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Unity.Services.Authentication;
+using Unity.Services.Core;
 using UnityEngine;
 
 public static class AuthenticationWrapper
@@ -7,24 +8,63 @@ public static class AuthenticationWrapper
     public static Authstate AuthState { get; private set; } = Authstate.NotAuthenticated;
 
 
-    public static async Task<Authstate> DoAuth(int maxtries = 5)
+    public static async Task<Authstate> DoAuth(int maxRetries)
     {
         if (AuthState == Authstate.Authenticated) return AuthState;
-        int tries = 0;
+        
+        if (AuthState == Authstate.Authenticating) // in case we call this function agian.
+        {
+            Debug.LogWarning("Already authenticating! ");
+            await Authenticating();
+            return AuthState;
+        }
+        
+        await SignInAnonymouslyAsync(maxRetries);
+        return AuthState;
+    }
 
+    private static async Task SignInAnonymouslyAsync(int maxRetries)
+    {
+        int reTries = 0;
         AuthState = Authstate.Authenticating;
 
-        while (AuthState == Authstate.Authenticating && tries < maxtries)
+        while (AuthState == Authstate.Authenticating && reTries < maxRetries)
         {
-            await AuthenticationService.Instance.SignInAnonymouslyAsync();
-
-            if (AuthenticationService.Instance.IsSignedIn && AuthenticationService.Instance.IsAuthorized)
+            try
             {
-                AuthState = Authstate.Authenticated;
-                break;
+                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+
+                if (AuthenticationService.Instance.IsSignedIn && AuthenticationService.Instance.IsAuthorized)
+                {
+                    AuthState = Authstate.Authenticated;
+                    break;
+                }
             }
-            tries++;
+            catch (AuthenticationException ex1) // Authentication fail server side
+            {
+                Debug.LogError(ex1.Message);
+                AuthState = Authstate.Error;
+            }
+            catch (RequestFailedException ex2) // no internet exception catch
+            {
+                Debug.LogError(ex2.Message);
+                AuthState = Authstate.Error;
+            }
+            reTries++;
             await Task.Delay(1000);
+        }
+
+        if (AuthState != Authstate.Authenticated) // max tries exceeded handeling
+        {
+            Debug.LogWarning($"Player was not signed in successfully after : [ {reTries} ] retries.");
+            AuthState = Authstate.TimeOut;
+        }
+    }
+    private static async Task<Authstate> Authenticating()
+    {
+        while (AuthState == Authstate.Authenticating || AuthState == Authstate.NotAuthenticated)
+        {
+            await Task.Delay(200);
         }
 
         return AuthState;
