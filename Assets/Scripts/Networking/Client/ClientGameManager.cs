@@ -1,10 +1,18 @@
 using System;
 using System.Threading.Tasks;
+using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
+using Unity.Networking.Transport.Relay;
 using Unity.Services.Core;
+using Unity.Services.Relay;
+using Unity.Services.Relay.Models;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using static UnityEngine.RuleTile.TilingRuleOutput;
 
 public class ClientGameManager
 {
+    private JoinAllocation allocation;
 
     private const string MenuSceneName = "Menu";
 
@@ -23,5 +31,30 @@ public class ClientGameManager
     public void GoToMenu()
     {
         SceneManager.LoadScene(MenuSceneName);
+    }
+
+    public async Task StartClientAsync(string joinCode)
+    {
+        try
+        {
+            allocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
+        }
+        catch (Exception ex)
+        {
+            Debug.Log(ex);
+            return;
+        }
+        
+        UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+
+        // Unity struct that contains all the connection information the game needs to connect to Unity Relay using the Unity Transport(UTP) networking layer.
+        RelayServerData relayServerData = AllocationUtils.ToRelayServerData(allocation, "dtls");
+
+        transport.SetRelayServerData(relayServerData); // notifying the NetworkManager's transport object about the relay server
+
+        // Now starting host on the relay service given by unity instead of a local server.
+        NetworkManager.Singleton.StartClient();
+
+        // Here there is no scene change because the server takes care of this for all clients.
     }
 }

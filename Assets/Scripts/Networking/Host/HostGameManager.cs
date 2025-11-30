@@ -47,7 +47,7 @@ public class HostGameManager
         UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
 
         // Unity struct that contains all the connection information the game needs to connect to Unity Relay using the Unity Transport(UTP) networking layer.
-        RelayServerData relayServerData = AllocationUtils.ToRelayServerData(allocation, "udp");
+        RelayServerData relayServerData = AllocationUtils.ToRelayServerData(allocation, "dtls");
 
         transport.SetRelayServerData(relayServerData); // notifying the NetworkManager's transport object about the relay server
 
