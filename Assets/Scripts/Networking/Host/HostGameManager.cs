@@ -1,9 +1,13 @@
 using NUnit.Framework;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Networking.Transport.Relay;
+using Unity.Services.Lobbies;
+using Unity.Services.Lobbies.Models;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
@@ -14,6 +18,8 @@ public class HostGameManager
     private Allocation allocation;
     
     private string joinCode;
+
+    private string lobbyId;
 
     private const int maxConn = 20;
 
@@ -51,9 +57,52 @@ public class HostGameManager
 
         transport.SetRelayServerData(relayServerData); // notifying the NetworkManager's transport object about the relay server
 
+        try
+        {
+            CreateLobbyOptions lobbyOptions = new CreateLobbyOptions();
+            lobbyOptions.IsPrivate = false;
+            lobbyOptions.Data = new Dictionary<string, DataObject>() 
+            {
+                {
+                    "JoinCode", new DataObject(
+                        visibility : DataObject.VisibilityOptions.Member, // this visibility makes sure that this DataObject can be read only if you are a member of the lobby.
+                        value : joinCode
+                        )
+                }
+            };
+            
+            Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(
+                "My Lobbie", 
+                maxConn, 
+                lobbyOptions
+                );
+            
+            lobbyId = lobby.Id;
+            HostSingelton.Instance.StartCoroutine(HeartBeatLobby(15));
+        }
+        catch (LobbyServiceException e)
+        {
+            Debug.Log(e);
+            return;
+        }
+        
         // Now starting host on the relay service given by unity instead of a local server.
         NetworkManager.Singleton.StartHost(); 
 
         NetworkManager.Singleton.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
+    }
+
+    private IEnumerator HeartBeatLobby(float waitTimeSeconds)
+    {
+        /*<script> Lobbies on UGS must be pingged every 15 seconds to keep the lobby alive or else
+         * USG will consider this lobby as inactive and would close it.
+         * Stopping the lobby involves stopping this coroutine.
+        */
+        WaitForSecondsRealtime pingDelay = new WaitForSecondsRealtime(waitTimeSeconds);
+        while (true)
+        {
+            LobbyService.Instance.SendHeartbeatPingAsync(lobbyId);
+            yield return pingDelay;
+        }
     }
 }
