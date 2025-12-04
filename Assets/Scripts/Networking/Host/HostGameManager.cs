@@ -42,7 +42,6 @@ public class HostGameManager
         try
         {
             joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
-            Debug.Log(joinCode);
         }
         catch (Exception e)
         {
