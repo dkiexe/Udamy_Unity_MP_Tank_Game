@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -51,6 +52,25 @@ public class ClientGameManager
         RelayServerData relayServerData = AllocationUtils.ToRelayServerData(allocation, "dtls");
 
         transport.SetRelayServerData(relayServerData); // notifying the NetworkManager's transport object about the relay server
+
+        // making a new user data object to then convert to json and send to the server.
+        UserData userData = new UserData
+        {
+            userName = PlayerPrefs.GetString(
+                NameSelector.PLAYERNAMEKEY,
+                "Guest"
+                )
+        };
+        
+        // converting the user class to a json object for sirialization.
+        string payload = JsonUtility.ToJson(userData);
+
+        // converting the json string to a byte array to be sent as a connection payload.
+
+        byte[] payloadbytes = Encoding.UTF8.GetBytes(payload);
+
+        // setting the connection data to be sent to the server on connect.
+        NetworkManager.Singleton.NetworkConfig.ConnectionData = payloadbytes;
 
         // Now starting host on the relay service given by unity instead of a local server.
         NetworkManager.Singleton.StartClient();

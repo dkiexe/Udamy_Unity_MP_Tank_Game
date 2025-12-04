@@ -2,6 +2,7 @@ using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -16,7 +17,9 @@ using UnityEngine.SceneManagement;
 public class HostGameManager
 {
     private Allocation allocation;
-    
+
+    private NetworkServer networkServer;
+
     private string joinCode;
 
     private string lobbyId;
@@ -69,9 +72,13 @@ public class HostGameManager
                         )
                 }
             };
+            string hostPlayerName = PlayerPrefs.GetString(
+                NameSelector.PLAYERNAMEKEY,
+                "???"
+                );
             
             Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(
-                "My Lobbie", 
+                hostPlayerName + "'s Lobby",
                 maxConn, 
                 lobbyOptions
                 );
@@ -84,7 +91,29 @@ public class HostGameManager
             Debug.Log(e);
             return;
         }
+
+        networkServer = new NetworkServer(NetworkManager.Singleton);
         
+        // making a new user data object to then convert to json and send to the server. ( we do this because a host is also a client )f
+        UserData userData = new UserData
+        {
+            userName = PlayerPrefs.GetString(
+                NameSelector.PLAYERNAMEKEY,
+                "Guest"
+                )
+        };
+
+        // converting the user class to a json object for sirialization.
+        string payload = JsonUtility.ToJson(userData);
+
+        // converting the json string to a byte array to be sent as a connection payload.
+
+        byte[] payloadbytes = Encoding.UTF8.GetBytes(payload);
+
+        // setting the connection data to be sent to the server on connect.
+        NetworkManager.Singleton.NetworkConfig.ConnectionData = payloadbytes;
+
+
         // Now starting host on the relay service given by unity instead of a local server.
         NetworkManager.Singleton.StartHost(); 
 
