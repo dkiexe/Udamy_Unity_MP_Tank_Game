@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
-public class NetworkServer
+public class NetworkServer : IDisposable
 {
     /// <summary>
     /// This class is a logic class that gets initalized by the HostGameManager and handles additional server side
@@ -67,5 +67,19 @@ public class NetworkServer
         if (!clientNetworkID_TO_AuthID.TryGetValue(clientNetworkID, out string authID)) return;
         clientNetworkID_TO_AuthID.Remove(clientNetworkID);
         authID_TO_UserData.Remove(authID);
+    }
+
+    public void Dispose()
+    {
+        if (networkManager == null) return;
+        networkManager.ConnectionApprovalCallback -= ApprovalCheck;
+        networkManager.OnClientDisconnectCallback -= HandleClientDisconnect;
+        networkManager.OnServerStarted -= OnNetworkReady;
+
+        // Incase the network manager is still listening shut it down.
+        if (networkManager.IsListening)
+        {
+            networkManager.Shutdown();
+        }
     }
 }

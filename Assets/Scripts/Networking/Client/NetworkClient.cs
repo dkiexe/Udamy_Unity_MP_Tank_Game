@@ -1,9 +1,10 @@
+using System;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class NetworkClient
+public class NetworkClient : IDisposable
 {
     /// <summary>
     /// This logic class handles client specific networking events and logic when a client is already connected to the server.
@@ -39,6 +40,14 @@ public class NetworkClient
         if (networkManager.IsConnectedClient)
         {
             networkManager.Shutdown();
+        }
+    }
+
+    public void Dispose()
+    {
+        if (networkManager != null)
+        {
+            networkManager.OnClientDisconnectCallback -= OnClientDisconnect;
         }
     }
 }

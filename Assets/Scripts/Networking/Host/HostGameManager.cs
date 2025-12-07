@@ -15,7 +15,7 @@ using Unity.Services.Relay.Models;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class HostGameManager
+public class HostGameManager : IDisposable
 {
     /// <summary>
     /// This class is a logic class that handles the following:
@@ -143,5 +143,27 @@ public class HostGameManager
             LobbyService.Instance.SendHeartbeatPingAsync(lobbyId);
             yield return pingDelay;
         }
+    }
+
+    public async void Dispose()
+    {
+        // stopping the heartbeat coroutine by name to stop pinging UGS about this lobby.
+        HostSingelton.Instance.StopCoroutine(nameof(HeartBeatLobby));
+
+        if (!String.IsNullOrEmpty(lobbyId))
+        {
+            try
+            {
+                await LobbyService.Instance.DeleteLobbyAsync(lobbyId);
+            }
+            catch (LobbyServiceException e)
+            {
+                Debug.Log(e);
+            }
+
+            lobbyId = string.Empty;
+        }
+
+        networkServer?.Dispose();
     }
 }

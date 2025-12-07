@@ -39,4 +39,8 @@ public class HostSingelton : MonoBehaviour
     {
         GameManager = new HostGameManager();
     }
+    private void OnDestroy()
+    {
+        GameManager?.Dispose();
+    }
 }

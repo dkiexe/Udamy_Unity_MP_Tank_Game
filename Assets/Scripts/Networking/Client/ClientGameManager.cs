@@ -11,7 +11,7 @@ using Unity.Services.Relay.Models;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class ClientGameManager
+public class ClientGameManager : IDisposable
 {
     /// <summary>
     /// This class is a logic class that handles the following:
@@ -89,5 +89,10 @@ public class ClientGameManager
         NetworkManager.Singleton.StartClient();
 
         // Here there is no scene change because the server takes care of this for all clients.
+    }
+
+    public void Dispose()
+    {
+        networkClient?.Dispose();
     }
 }
