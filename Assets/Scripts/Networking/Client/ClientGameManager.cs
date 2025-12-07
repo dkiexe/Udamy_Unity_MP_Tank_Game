@@ -4,16 +4,26 @@ using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Networking.Transport.Relay;
+using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using static UnityEngine.RuleTile.TilingRuleOutput;
 
 public class ClientGameManager
 {
+    /// <summary>
+    /// This class is a logic class that handles the following:
+    /// 1) client side Unity Game Services (UGS) authentication.
+    /// 2) UGS client initialization.
+    /// 3) Joining a UGS relay server as a UGS client.
+    /// 4) Loading the menu scene for the client.
+    /// </summary>
+
     private JoinAllocation allocation;
+
+    private NetworkClient networkClient;
 
     private const string MenuSceneName = "Menu";
 
@@ -21,6 +31,8 @@ public class ClientGameManager
     {
         // initalize unity services, this must be done every time when wanting to use unity services.
         await UnityServices.InitializeAsync();
+
+        networkClient = new NetworkClient(NetworkManager.Singleton);
 
         // now we do our own anonimus player authentication using UGS ( unity game services )
         Authstate AuthState = await AuthenticationWrapper.DoAuth(5);
@@ -59,7 +71,8 @@ public class ClientGameManager
             userName = PlayerPrefs.GetString(
                 NameSelector.PLAYERNAMEKEY,
                 "Guest"
-                )
+                ),
+            userAuthId = AuthenticationService.Instance.PlayerId
         };
         
         // converting the user class to a json object for sirialization.

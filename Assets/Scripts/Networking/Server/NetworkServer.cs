@@ -1,10 +1,23 @@
 using System;
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
 public class NetworkServer
 {
+    /// <summary>
+    /// This class is a logic class that gets initalized by the HostGameManager and handles additional server side
+    /// logic through event subscriptions to the NetworkManager, from this class we can control client approvals, 
+    /// client disconnects and even set up logic to to be runned as soon as the server starts.
+    /// </summary>
     private NetworkManager networkManager;
+
+    // Dictionary UGS server id to a UGS authintication id.
+    private Dictionary<ulong, string> clientNetworkID_TO_AuthID = new Dictionary<ulong, string>();
+
+    // Dictionary UGS authintication id to UserData object.
+    private Dictionary<string, UserData> authID_TO_UserData = new Dictionary<string, UserData>();
+
     public NetworkServer(NetworkManager networkManager)
     {
         this.networkManager = networkManager;
@@ -15,6 +28,8 @@ public class NetworkServer
         * This method allows us to control traffic for our server.
         */
         networkManager.ConnectionApprovalCallback += ApprovalCheck;
+        // Subscribing to server started event ( gets called after a server is fully initialized. ).
+        networkManager.OnServerStarted += OnNetworkReady;
     }
 
     private void ApprovalCheck(
@@ -28,9 +43,29 @@ public class NetworkServer
         // taking the json string and converting it to UserData object
         UserData userData = JsonUtility.FromJson<UserData>(stringPaylaod);
 
-        Debug.Log(userData.userName);
+        clientNetworkID_TO_AuthID[request.ClientNetworkId] = userData.userAuthId;
+        authID_TO_UserData[userData.userAuthId] = userData;
 
         response.Approved = true; // Approving all connections for now
         response.CreatePlayerObject = true; // let the network manager create a player object for the connection
+    }
+    
+    private void OnNetworkReady()
+    {
+        /* Subscribing to OnServerStarted before OnClientDisconnectCallback gives the following benifits:
+         * The server is fully set 
+         * Networking callbacks are initialized
+         * The server is ready to accept clients and fire disconnect events
+         * ** Subscribing before the server is ready could lead to errors if a client disconnects before the server is fully set up. *
+         */
+        networkManager.OnClientDisconnectCallback += HandleClientDisconnect;
+    }
+
+    private void HandleClientDisconnect(ulong clientNetworkID)
+    {
+        // Dropping data from dictinaries when a client disconnects to prevent memory leaks.
+        if (!clientNetworkID_TO_AuthID.TryGetValue(clientNetworkID, out string authID)) return;
+        clientNetworkID_TO_AuthID.Remove(clientNetworkID);
+        authID_TO_UserData.Remove(authID);
     }
 }

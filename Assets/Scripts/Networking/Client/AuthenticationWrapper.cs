@@ -5,6 +5,11 @@ using UnityEngine;
 
 public static class AuthenticationWrapper
 {
+    /// <summary>
+    ///  This Class is a logic class that wraps around the Unity Game Services Authentication service,
+    ///  this class handles client annonimous authentication with retry logic and state management.
+    /// </summary>
+
     public static Authstate AuthState { get; private set; } = Authstate.NotAuthenticated;
 
 

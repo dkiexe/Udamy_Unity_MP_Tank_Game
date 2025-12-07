@@ -3,6 +3,12 @@ using UnityEngine;
 
 public class ApplicationController : MonoBehaviour
 {
+    /// <summary>
+    /// This class is the heart of the Networking logic and is responsible for identifiying
+    /// if the application is running as a dedicated server or as a client/host pattern.
+    /// Based on this it will launch the appropriate prefabs that are responsible for
+    /// creating instences, effectivly starting the networking session.
+    /// </summary>
     [SerializeField] private ClientSingelton clientPrefab;
     [SerializeField] private HostSingelton hostPrefab;
 

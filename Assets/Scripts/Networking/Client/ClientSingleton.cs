@@ -3,7 +3,16 @@ using UnityEngine;
 
 public class ClientSingelton : MonoBehaviour
 {
+    /// <summary>
+    ///  This class is attatched to a Client game manager prefab
+    ///  and is tasked with being a singleton that persists between scenes
+    ///  and represents client.
+    ///  
+    ///  This class also holds a reference to the ClientGameManager, and calls its init method.
+    /// </summary>
     private static ClientSingelton instance;
+
+    public ClientGameManager GameManager { get; private set; }
 
     public static ClientSingelton Instance
     {
@@ -21,8 +30,6 @@ public class ClientSingelton : MonoBehaviour
             return instance;
         }
     }
-
-    public ClientGameManager GameManager { get; private set; }
 
     private void Start()
     {

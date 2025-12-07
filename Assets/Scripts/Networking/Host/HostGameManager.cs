@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Networking.Transport.Relay;
+using Unity.Services.Authentication;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using Unity.Services.Relay;
@@ -16,6 +17,14 @@ using UnityEngine.SceneManagement;
 
 public class HostGameManager
 {
+    /// <summary>
+    /// This class is a logic class that handles the following:
+    /// 1) Requesting a relay allocation from UGS and joining the relay as a client.
+    /// 2) Creating a lobby on UGS and keeping it alive with heartbeats using a coroutine.
+    /// 3) Starting a host server using Unity Netcode's NetworkManager on the relay server.
+    /// 4) Switching to the game scene after the host is started.
+    /// </summary>
+
     private Allocation allocation;
 
     private NetworkServer networkServer;
@@ -52,13 +61,7 @@ public class HostGameManager
             return;
         }
 
-        UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-
-        // Unity struct that contains all the connection information the game needs to connect to Unity Relay using the Unity Transport(UTP) networking layer.
-        RelayServerData relayServerData = AllocationUtils.ToRelayServerData(allocation, "dtls");
-
-        transport.SetRelayServerData(relayServerData); // notifying the NetworkManager's transport object about the relay server
-
+        // Creating a lobby on UGS with the join code as a data object.
         try
         {
             CreateLobbyOptions lobbyOptions = new CreateLobbyOptions();
@@ -100,7 +103,8 @@ public class HostGameManager
             userName = PlayerPrefs.GetString(
                 NameSelector.PLAYERNAMEKEY,
                 "Guest"
-                )
+                ),
+            userAuthId = AuthenticationService.Instance.PlayerId
         };
 
         // converting the user class to a json object for sirialization.
@@ -113,6 +117,13 @@ public class HostGameManager
         // setting the connection data to be sent to the server on connect.
         NetworkManager.Singleton.NetworkConfig.ConnectionData = payloadbytes;
 
+        // Getting the NetworkManager's transport component to set the relay server data.
+        UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+
+        // Unity struct that contains all the connection information the game needs to connect to Unity Relay using the Unity Transport(UTP) networking layer.
+        RelayServerData relayServerData = AllocationUtils.ToRelayServerData(allocation, "dtls");
+
+        transport.SetRelayServerData(relayServerData); // notifying the NetworkManager's transport object about the relay server
 
         // Now starting host on the relay service given by unity instead of a local server.
         NetworkManager.Singleton.StartHost(); 
