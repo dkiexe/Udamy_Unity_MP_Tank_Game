@@ -69,6 +69,18 @@ public class NetworkServer : IDisposable
         authID_TO_UserData.Remove(authID);
     }
 
+    public UserData GetUserDataFromClientID(ulong ClientId)
+    {
+        if (clientNetworkID_TO_AuthID.TryGetValue(ClientId, out string authId))
+        {
+            if (authID_TO_UserData.TryGetValue(authId, out UserData userData))
+            {
+                return userData;
+            }
+        }
+        return null;
+    }
+
     public void Dispose()
     {
         if (networkManager == null) return;

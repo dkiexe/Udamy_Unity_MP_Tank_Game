@@ -27,8 +27,6 @@ public class HostGameManager : IDisposable
 
     private Allocation allocation;
 
-    private NetworkServer networkServer;
-
     private string joinCode;
 
     private string lobbyId;
@@ -36,6 +34,8 @@ public class HostGameManager : IDisposable
     private const int maxConn = 20;
 
     private const string gameSceneName = "Game";
+
+    public NetworkServer networkServer { get; private set; }
 
     public async Task StartHostAsync()
     {
