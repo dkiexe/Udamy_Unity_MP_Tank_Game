@@ -12,6 +12,8 @@ public class TankPlayer : NetworkBehaviour
     [SerializeField] private int OwnerCamPriority = 20;
 
     public NetworkVariable<FixedString32Bytes> PlayerName = new NetworkVariable<FixedString32Bytes>();
+
+    private NetworkVariable<Vector3> SpawnPos = new NetworkVariable<Vector3>();
     
     public override void OnNetworkSpawn()
     {
@@ -27,6 +29,7 @@ public class TankPlayer : NetworkBehaviour
                 OwnerClientId
             );
 
+            SpawnPos.Value = HostSingelton.Instance.GameManager.networkServer.GetSpawnPosForClient(OwnerClientId);
             PlayerName.Value = userData.userName;
         }
 
@@ -34,5 +37,9 @@ public class TankPlayer : NetworkBehaviour
         {
             TankCam.Priority = OwnerCamPriority;
         }
+    }
+    private void Start()
+    {
+        gameObject.transform.position = SpawnPos.Value;
     }
 }

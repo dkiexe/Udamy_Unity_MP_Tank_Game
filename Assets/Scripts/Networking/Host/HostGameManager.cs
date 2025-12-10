@@ -147,23 +147,26 @@ public class HostGameManager : IDisposable
 
     public async void Dispose()
     {
-        // stopping the heartbeat coroutine by name to stop pinging UGS about this lobby.
-        HostSingelton.Instance.StopCoroutine(nameof(HeartBeatLobby));
-
-        if (!String.IsNullOrEmpty(lobbyId))
+        try
         {
-            try
-            {
-                await LobbyService.Instance.DeleteLobbyAsync(lobbyId);
-            }
-            catch (LobbyServiceException e)
-            {
-                Debug.Log(e);
-            }
+            // stopping the heartbeat coroutine by name to stop pinging UGS about this lobby.
+            HostSingelton.Instance.StopCoroutine(nameof(HeartBeatLobby));
 
-            lobbyId = string.Empty;
+            if (!String.IsNullOrEmpty(lobbyId))
+            {
+                try
+                {
+                    await LobbyService.Instance.DeleteLobbyAsync(lobbyId);
+                }
+                catch (LobbyServiceException e)
+                {
+                    Debug.Log(e);
+                }
+
+                lobbyId = string.Empty;
+            }
+            networkServer?.Dispose();
         }
-
-        networkServer?.Dispose();
+        catch (NullReferenceException) { }
     }
 }
