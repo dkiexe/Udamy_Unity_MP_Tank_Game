@@ -18,8 +18,6 @@ public class NetworkServer : IDisposable
     // Dictionary UGS authintication id to UserData object.
     private Dictionary<string, UserData> authID_TO_UserData = new Dictionary<string, UserData>();
 
-    private Dictionary<ulong, Vector3> clientNetworkID_TO_SpawnPoint = new Dictionary<ulong, Vector3>();
-
     public NetworkServer(NetworkManager networkManager)
     {
         this.networkManager = networkManager;
@@ -49,8 +47,6 @@ public class NetworkServer : IDisposable
         authID_TO_UserData[userData.userAuthId] = userData;
 
         response.Approved = true; // Approving all connections for now
-        // setting a random spawn position for the player
-        clientNetworkID_TO_SpawnPoint[request.ClientNetworkId] = SpawnPoint.GetRandomSpawnPos();
         response.CreatePlayerObject = true; // let the network manager create a player object for the connection
     }
     
@@ -83,15 +79,6 @@ public class NetworkServer : IDisposable
             }
         }
         return null;
-    }
-
-    public Vector3 GetSpawnPosForClient(ulong clientNetworkID)
-    {
-        if (clientNetworkID_TO_SpawnPoint.TryGetValue(clientNetworkID, out Vector3 pos))
-        {
-            return pos;
-        }
-        return Vector3.zero;
     }
 
     public void Dispose()
