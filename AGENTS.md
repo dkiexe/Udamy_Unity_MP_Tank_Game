@@ -1,8 +1,8 @@
 <!-- UNITY CODE ASSIST INSTRUCTIONS START -->
 - Project name: MultiPlayerTanks
-- Unity version: Unity 6000.2.9f1
+- Unity version: Unity 6000.3.1f1
 - Active game object:
-  - Name: Text (TMP)
+  - Name: LeaderBoardEntity
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->
