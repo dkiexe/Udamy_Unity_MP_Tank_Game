@@ -150,3 +150,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64bc70a19c9f8024dbeed137cb21f54b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LeaderBoardEntityDisplay
+  displayText: {fileID: 5543781122442791151}

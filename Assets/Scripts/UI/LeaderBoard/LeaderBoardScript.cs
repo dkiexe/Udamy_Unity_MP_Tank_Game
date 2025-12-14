@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -9,6 +11,7 @@ public class LeaderBoardScript : NetworkBehaviour
     [SerializeField] private LeaderBoardEntityDisplay leaderboardEntityPrefab;
 
     private NetworkList<LeaderBoardEntityState> leaderBoardEntities;
+    private List<LeaderBoardEntityDisplay> entityDisplays = new List<LeaderBoardEntityDisplay>();
 
     private void Awake()
     {
@@ -86,9 +89,42 @@ public class LeaderBoardScript : NetworkBehaviour
         switch (changeEvent.Type)
         {
             case NetworkListEvent<LeaderBoardEntityState>.EventType.Add:
-                Instantiate(leaderboardEntityPrefab, leaderboardEntityHolder);
+                // if there are not any entity displays where it matches this clientID spawn one!
+                if (!entityDisplays.Any(x => x.ClientID == changeEvent.Value.ClientID))
+                {
+                    LeaderBoardEntityDisplay leaderBoardEntityDisplay =  
+                        Instantiate(leaderboardEntityPrefab, leaderboardEntityHolder);
+
+                    leaderBoardEntityDisplay.Initialise(
+                        changeEvent.Value.ClientID,
+                        changeEvent.Value.PlayerName,
+                        changeEvent.Value.Coins
+                        );
+
+                    entityDisplays.Add(leaderBoardEntityDisplay);
+                }
                 break;
+            
             case NetworkListEvent<LeaderBoardEntityState>.EventType.Remove:
+                // finding the first LeaderBoardEntityDisplay that matches the clientID or a  
+                LeaderBoardEntityDisplay displayToRemove =
+                    entityDisplays.FirstOrDefault(x => x.ClientID == changeEvent.Value.ClientID);
+                if (displayToRemove != null)
+                {
+                    displayToRemove.transform.SetParent(null);
+                    Destroy(displayToRemove.gameObject);
+                    entityDisplays.Remove(displayToRemove);
+                }
+                break;
+            
+            // The value event means that the vale of the LeaderBoardEntityState has changed
+            case NetworkListEvent<LeaderBoardEntityState>.EventType.Value:
+                LeaderBoardEntityDisplay displayToUpdate =
+                    entityDisplays.FirstOrDefault(x => x.ClientID == changeEvent.Value.ClientID);
+                if (displayToUpdate != null)
+                {
+                    displayToUpdate.updateCoins(changeEvent.Value.Coins);
+                }
                 break;
         }
     }
