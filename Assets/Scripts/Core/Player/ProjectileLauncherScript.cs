@@ -32,6 +32,7 @@ public class ProjectileLauncherScript : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         if (!IsOwner) return;
+        inputReader.PrimaryFireEvent -= HandlePrimaryFire;
     }
 
     private void Update()

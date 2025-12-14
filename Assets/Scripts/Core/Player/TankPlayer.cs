@@ -10,6 +10,7 @@ public class TankPlayer : NetworkBehaviour
     [Header("Refrences")]
     [SerializeField] private CinemachineCamera TankCam;
     [field: SerializeField] public Health playerHealth { get; private set; }
+    [field: SerializeField] public CoinWallet Wallet { get; private set; }
 
     [Header("Settings")]
     [SerializeField] private int OwnerCamPriority = 20;

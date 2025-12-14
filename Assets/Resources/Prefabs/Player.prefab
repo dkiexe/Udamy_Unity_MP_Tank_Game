@@ -1000,6 +1000,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   TankCam: {fileID: 6998829226751006007}
   <playerHealth>k__BackingField: {fileID: 922189364973165008}
+  <Wallet>k__BackingField: {fileID: 856842355059159909}
   OwnerCamPriority: 20
   PlayerName:
     m_InternalValue:
@@ -1036,6 +1037,8 @@ MonoBehaviour:
         byte0027: 0
         byte0028: 0
         byte0029: 0
+  SpawnPos:
+    m_InternalValue: {x: 0, y: 0, z: 0}
 --- !u!114 &7333020464294567790
 MonoBehaviour:
   m_ObjectHideFlags: 0

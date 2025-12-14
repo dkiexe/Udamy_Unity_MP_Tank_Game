@@ -68,6 +68,13 @@ public class LeaderBoardScript : NetworkBehaviour
             PlayerName = player.PlayerName.Value,
             Coins = 0
         });
+
+        player.Wallet.TotalCoins.OnValueChanged += (oldVal, newVal) => 
+        HandleCoinsChanged(
+            player.OwnerClientId,
+            newVal
+        );
+
     }
 
     private void HandlePlayerDeSpawned(TankPlayer player)
@@ -82,6 +89,12 @@ public class LeaderBoardScript : NetworkBehaviour
                 break;
             }
         }
+
+        player.Wallet.TotalCoins.OnValueChanged -= (oldVal, newVal) => 
+        HandleCoinsChanged(
+            player.OwnerClientId,
+            newVal
+        );
     }
 
     private void HandleLeaderBoardEntitiesChanged(NetworkListEvent<LeaderBoardEntityState> changeEvent)
@@ -129,4 +142,20 @@ public class LeaderBoardScript : NetworkBehaviour
         }
     }
 
+    private void HandleCoinsChanged(ulong clientId, int newCoins)
+    {
+        for (int i = 0; i < leaderBoardEntities.Count; i++)
+        {
+            LeaderBoardEntityState leaderBoardEntityState = leaderBoardEntities[i];
+            if (leaderBoardEntities[i].ClientID != clientId) continue;
+
+            leaderBoardEntities[i] = new LeaderBoardEntityState
+            {
+                ClientID = leaderBoardEntities[i].ClientID,
+                PlayerName = leaderBoardEntities[i].PlayerName,
+                Coins = newCoins
+            };
+            return;
+        }
+    }
 }
