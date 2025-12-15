@@ -151,3 +151,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LeaderBoardEntityDisplay
   displayText: {fileID: 5543781122442791151}
+  selfPlayerColor: {r: 0.41229087, g: 0.8018868, b: 0.45160785, a: 1}
