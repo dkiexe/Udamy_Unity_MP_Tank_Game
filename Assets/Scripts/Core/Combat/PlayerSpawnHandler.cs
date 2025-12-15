@@ -6,7 +6,10 @@ using UnityEngine;
 public class PlayerSpawnHandler : NetworkBehaviour
 {
     [Header("Player Referance")]
-    [SerializeField] private NetworkObject playerPrefab;
+    [SerializeField] private TankPlayer playerPrefab;
+
+    [Header("Respawn Settings")]
+    [SerializeField] private float coinPercentageLossOnDeath = 0.5f; 
 
     public override void OnNetworkSpawn()
     {
@@ -47,19 +50,26 @@ public class PlayerSpawnHandler : NetworkBehaviour
     {
         Destroy(player.gameObject);
 
-        StartCoroutine(SpawnPlayerNextFrame(player.OwnerClientId));
+        int coinValueAfterDeath = (int) (player.Wallet.TotalCoins.Value * (1 - coinPercentageLossOnDeath));
+
+        StartCoroutine(SpawnPlayerNextFrame(
+            player.OwnerClientId,
+            coinValueAfterDeath
+            ));
     }
 
-    private IEnumerator SpawnPlayerNextFrame(ulong ownerClientID)
+    private IEnumerator SpawnPlayerNextFrame(ulong ownerClientID, int coinValueAfterDeath)
     {
         yield return null;
 
-        NetworkObject newPlayerGameObject = Instantiate
+        TankPlayer newPlayerGameObject = Instantiate
             (
                 playerPrefab
             );
-        ReassignSpawnPosClient(newPlayerGameObject.GetComponent<TankPlayer>());
-        newPlayerGameObject.SpawnAsPlayerObject(ownerClientID);
+
+        newPlayerGameObject.NetworkObject.SpawnAsPlayerObject(ownerClientID);
+        ReassignSpawnPosClient(newPlayerGameObject);
+        newPlayerGameObject.Wallet.TotalCoins.Value += coinValueAfterDeath;
     }
 
     public static void ReassignSpawnPosClient(TankPlayer tankPlayer)

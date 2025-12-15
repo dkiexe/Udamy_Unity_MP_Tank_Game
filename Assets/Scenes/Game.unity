@@ -719,7 +719,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerSpawnHandler
   ShowTopMostFoldoutHeaderGroup: 1
-  playerPrefab: {fileID: 2503759290684031544, guid: 496d989c49b006f42b0ed012bd5cffdc, type: 3}
+  playerPrefab: {fileID: 7279947872153785021, guid: 496d989c49b006f42b0ed012bd5cffdc, type: 3}
+  coinPercentageLossOnDeath: 0.4
 --- !u!1001 &202773703
 PrefabInstance:
   m_ObjectHideFlags: 0
