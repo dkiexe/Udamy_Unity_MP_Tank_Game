@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &5118496592904136275
+--- !u!1001 &5026252254918439803
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -10,11 +10,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 221162393052130042, guid: 26522aed70ad2e240b3c48a607d86ae1, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -7.0308247
+      value: -0.84534
       objectReference: {fileID: 0}
     - target: {fileID: 221162393052130042, guid: 26522aed70ad2e240b3c48a607d86ae1, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.9117742
+      value: -1.45575
       objectReference: {fileID: 0}
     - target: {fileID: 221162393052130042, guid: 26522aed70ad2e240b3c48a607d86ae1, type: 3}
       propertyPath: m_LocalPosition.z
@@ -50,7 +50,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1643227730812708855, guid: 26522aed70ad2e240b3c48a607d86ae1, type: 3}
       propertyPath: GlobalObjectIdHash
-      value: 109031774
+      value: 1958697012
       objectReference: {fileID: 0}
     - target: {fileID: 1643227730812708855, guid: 26522aed70ad2e240b3c48a607d86ae1, type: 3}
       propertyPath: SceneMigrationSynchronization
@@ -60,88 +60,43 @@ PrefabInstance:
       propertyPath: InScenePlacedSourceGlobalObjectIdHash
       value: 1406239176
       objectReference: {fileID: 0}
+    - target: {fileID: 5226290270616599816, guid: 26522aed70ad2e240b3c48a607d86ae1, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 7bfd0a0977e81b84a8f1d12195e5883a, type: 3}
     - target: {fileID: 6797181030364016519, guid: 26522aed70ad2e240b3c48a607d86ae1, type: 3}
       propertyPath: m_Name
-      value: RespawningCoin
+      value: BountyCoin
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 6797181030364016519, guid: 26522aed70ad2e240b3c48a607d86ae1, type: 3}
-      insertIndex: 2
-      addedObject: {fileID: -8223920371203656460}
-    - targetCorrespondingSourceObject: {fileID: 6797181030364016519, guid: 26522aed70ad2e240b3c48a607d86ae1, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 711333056770921862}
+      addedObject: {fileID: 5602358071605277580}
   m_SourcePrefab: {fileID: 100100000, guid: 26522aed70ad2e240b3c48a607d86ae1, type: 3}
---- !u!212 &1121131083945450331 stripped
+--- !u!212 &956828570989481587 stripped
 SpriteRenderer:
   m_CorrespondingSourceObject: {fileID: 5226290270616599816, guid: 26522aed70ad2e240b3c48a607d86ae1, type: 3}
-  m_PrefabInstance: {fileID: 5118496592904136275}
+  m_PrefabInstance: {fileID: 5026252254918439803}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1827614455673375188 stripped
+--- !u!1 &1987395759904234748 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6797181030364016519, guid: 26522aed70ad2e240b3c48a607d86ae1, type: 3}
-  m_PrefabInstance: {fileID: 5118496592904136275}
+  m_PrefabInstance: {fileID: 5026252254918439803}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &-8223920371203656460
+--- !u!114 &5602358071605277580
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1827614455673375188}
+  m_GameObject: {fileID: 1987395759904234748}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e96cb6065543e43c4a752faaa1468eb1, type: 3}
+  m_Script: {fileID: 11500000, guid: cc334c4589e2f794cbcbe8ac7d09b3d7, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkTransform
+  m_EditorClassIdentifier: Assembly-CSharp::BountyCoin
   ShowTopMostFoldoutHeaderGroup: 1
-  NetworkTransformExpanded: 0
-  AutoOwnerAuthorityTickOffset: 1
-  PositionInterpolationType: 0
-  RotationInterpolationType: 0
-  ScaleInterpolationType: 0
-  PositionLerpSmoothing: 1
-  PositionMaxInterpolationTime: 0.1
-  RotationLerpSmoothing: 1
-  RotationMaxInterpolationTime: 0.1
-  ScaleLerpSmoothing: 1
-  ScaleMaxInterpolationTime: 0.1
-  AuthorityMode: 0
-  TickSyncChildren: 0
-  UseUnreliableDeltas: 0
-  SyncPositionX: 1
-  SyncPositionY: 1
-  SyncPositionZ: 0
-  SyncRotAngleX: 0
-  SyncRotAngleY: 0
-  SyncRotAngleZ: 0
-  SyncScaleX: 0
-  SyncScaleY: 0
-  SyncScaleZ: 0
-  PositionThreshold: 0.001
-  RotAngleThreshold: 0.01
-  ScaleThreshold: 0.01
-  UseQuaternionSynchronization: 0
-  UseQuaternionCompression: 0
-  UseHalfFloatPrecision: 0
-  InLocalSpace: 0
-  SwitchTransformSpaceWhenParented: 0
-  Interpolate: 0
-  SlerpPosition: 0
---- !u!114 &711333056770921862
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1827614455673375188}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27b01a4864ead5749bd97c44de88d059, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RespawningCoin
-  ShowTopMostFoldoutHeaderGroup: 1
-  spriteRenderer: {fileID: 1121131083945450331}
+  spriteRenderer: {fileID: 956828570989481587}

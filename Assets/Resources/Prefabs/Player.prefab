@@ -983,6 +983,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CoinWallet
   ShowTopMostFoldoutHeaderGroup: 1
+  health: {fileID: 922189364973165008}
+  bountyCoinPrefab: {fileID: 5602358071605277580, guid: a040419b8742bb34fa28d726b484cfa9, type: 3}
+  bountyPercentage: 0.5
+  bountyCoinCount: 10
+  minBountyCoinCount: 10
+  coinSpread: 3
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 1
   TotalCoins:
     m_InternalValue: 0
 --- !u!114 &7279947872153785021
