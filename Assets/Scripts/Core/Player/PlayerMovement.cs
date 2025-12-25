@@ -10,6 +10,8 @@ public class PlayerMovement : NetworkBehaviour // NetworkBehaviour is used to ac
     
     [SerializeField] private Rigidbody2D rb;
 
+    [SerializeField] private NitroBooster booster;
+
     [Header("Settings")]
     [SerializeField] private float moveSpeed = 4f; 
 
@@ -43,6 +45,6 @@ public class PlayerMovement : NetworkBehaviour // NetworkBehaviour is used to ac
     private void FixedUpdate() // works best with physics of a rigid body 2D
     {
         if (!IsOwner) return;
-        rb.linearVelocity = (Vector2)bodyTransform.up * previousMovementInput.y * moveSpeed;
+        rb.linearVelocity = (Vector2)bodyTransform.up * previousMovementInput.y * (moveSpeed * booster.boostValue.Value);
     }
 }

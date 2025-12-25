@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public class NewMonoBehaviourScript : NetworkBehaviour
 {
-    [Header("Refrences")]
+    [Header("References")]
     [SerializeField] private Image healPowerBar;
 
     [Header("Settings")]

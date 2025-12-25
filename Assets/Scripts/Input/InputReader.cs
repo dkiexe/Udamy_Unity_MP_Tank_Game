@@ -8,6 +8,7 @@ using static PlayerControls;
 public class InputReader : ScriptableObject, IPlayerActions
 {
     public event Action<bool> PrimaryFireEvent;
+    public event Action<bool> NitroPressEvent;
     public event Action<Vector2> MoveEvent;
     
     public Vector2 AimPosition { get; private set; }
@@ -41,5 +42,10 @@ public class InputReader : ScriptableObject, IPlayerActions
     public void OnPrimaryFire(InputAction.CallbackContext context)
     {
         PrimaryFireEvent?.Invoke(context.performed);
+    }
+
+    public void OnNitro(InputAction.CallbackContext context)
+    {
+        NitroPressEvent?.Invoke(context.performed);
     }
 }

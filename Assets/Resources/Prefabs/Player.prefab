@@ -479,7 +479,7 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 3976198248781151948}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.1497637}
+  m_AnchorMin: {x: 0, y: 0.25}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
@@ -677,6 +677,81 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &5457073541552128817
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3835595151663709699}
+  - component: {fileID: 7300444386337708205}
+  - component: {fileID: 960737197062999788}
+  m_Layer: 0
+  m_Name: BoostBar
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &3835595151663709699
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5457073541552128817}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3976198248781151948}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0.1497637}
+  m_AnchorMax: {x: 1, y: 0.25}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &7300444386337708205
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5457073541552128817}
+  m_CullTransparentMesh: 1
+--- !u!114 &960737197062999788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5457073541552128817}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.9765893, g: 1, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 7482667652216324306, guid: 48e93eef0688c4a259cb0eddcd8661f7, type: 3}
+  m_Type: 3
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 0
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &5934627194254252105
 GameObject:
   m_ObjectHideFlags: 0
@@ -709,6 +784,7 @@ RectTransform:
   m_Children:
   - {fileID: 4447809862587250095}
   - {fileID: 1090599271528657425}
+  - {fileID: 3835595151663709699}
   m_Father: {fileID: 1508610260841807440}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -773,6 +849,7 @@ GameObject:
   - component: {fileID: 856842355059159909}
   - component: {fileID: 7279947872153785021}
   - component: {fileID: 7333020464294567790}
+  - component: {fileID: 6504460670812366864}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -886,6 +963,7 @@ MonoBehaviour:
   inputReader: {fileID: 11400000, guid: 06e1e4949a1db534899aa11dbd3fdc86, type: 2}
   bodyTransform: {fileID: 5095921611150462173}
   rb: {fileID: 2120992718195331245}
+  booster: {fileID: 6504460670812366864}
   moveSpeed: 4
   turningRate: 270
 --- !u!114 &7657043993522609228
@@ -1062,6 +1140,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerNameDisplay
   tankPlayer: {fileID: 7279947872153785021}
   playerNameText: {fileID: 7692946731898892920}
+--- !u!114 &6504460670812366864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6408323548908524066}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4777d5a6b6929d43b49b03221d062ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NitroBooster
+  ShowTopMostFoldoutHeaderGroup: 1
+  playerMovement: {fileID: 3714463008691125884}
+  inputReader: {fileID: 11400000, guid: 06e1e4949a1db534899aa11dbd3fdc86, type: 2}
+  wallet: {fileID: 856842355059159909}
+  BoostBarImage: {fileID: 960737197062999788}
+  boostMultiVal: 2
+  costToBoost: 10
+  boostDuration: 2
+  boostCooldown: 2
+  boostMultiplier:
+    m_InternalValue: 1
 --- !u!1 &7613400706177228403
 GameObject:
   m_ObjectHideFlags: 0

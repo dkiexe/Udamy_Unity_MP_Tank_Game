@@ -6,7 +6,7 @@ using static UnityEngine.LowLevelPhysics2D.PhysicsShape;
 
 public class CoinWallet : NetworkBehaviour
 {
-    [Header("Refrences")]
+    [Header("References")]
     [SerializeField] private Health health;
     [SerializeField] private BountyCoin bountyCoinPrefab;
 

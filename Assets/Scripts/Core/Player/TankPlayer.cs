@@ -7,7 +7,7 @@ using UnityEngine;
 
 public class TankPlayer : NetworkBehaviour
 {
-    [Header("Refrences")]
+    [Header("References")]
     [SerializeField] private CinemachineCamera TankCam;
     [field: SerializeField] public Health playerHealth { get; private set; }
     [field: SerializeField] public CoinWallet Wallet { get; private set; }

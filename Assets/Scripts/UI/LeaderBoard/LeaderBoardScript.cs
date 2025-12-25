@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class LeaderBoardScript : NetworkBehaviour
 {
-    [Header("Refrences")]
+    [Header("References")]
     [SerializeField] private Transform leaderboardEntityHolder;
     [SerializeField] private LeaderBoardEntityDisplay leaderboardEntityPrefab;
 
