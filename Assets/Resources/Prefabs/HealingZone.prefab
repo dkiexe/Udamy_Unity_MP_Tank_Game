@@ -180,7 +180,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NewMonoBehaviourScript
   ShowTopMostFoldoutHeaderGroup: 1
   healPowerBar: {fileID: 4524660757136842489}
-  maxHealPower: 30
+  maxHealPower: 10
   healCooldown: 60
   healTickRate: 1
   CoinsPerTick: 10
