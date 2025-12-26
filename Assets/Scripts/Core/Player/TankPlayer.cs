@@ -9,11 +9,13 @@ public class TankPlayer : NetworkBehaviour
 {
     [Header("References")]
     [SerializeField] private CinemachineCamera TankCam;
+    [SerializeField] private SpriteRenderer MinimapIconSprite;
     [field: SerializeField] public Health playerHealth { get; private set; }
     [field: SerializeField] public CoinWallet Wallet { get; private set; }
 
     [Header("Settings")]
     [SerializeField] private int OwnerCamPriority = 20;
+    [SerializeField] private Color OwnerMinimapColor = Color.blue;
 
     public NetworkVariable<FixedString32Bytes> PlayerName = new NetworkVariable<FixedString32Bytes>();
     public NetworkVariable<Vector3> SpawnPos = new NetworkVariable<Vector3>();
@@ -49,6 +51,7 @@ public class TankPlayer : NetworkBehaviour
                 transform.localScale
             );
             TankCam.Priority = OwnerCamPriority;
+            MinimapIconSprite.color = OwnerMinimapColor;
         }
     }
 
