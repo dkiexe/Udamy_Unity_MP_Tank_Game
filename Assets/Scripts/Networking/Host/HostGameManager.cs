@@ -131,6 +131,35 @@ public class HostGameManager : IDisposable
         NetworkManager.Singleton.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
     }
 
+    public void StartLanHost()
+    {
+        networkServer = new NetworkServer(NetworkManager.Singleton);
+
+        // making a new user data object to then convert to json and send to the server. ( we do this because a host is also a client )
+        UserData userData = new UserData
+        {
+            userName = PlayerPrefs.GetString(
+                NameSelector.PLAYERNAMEKEY,
+                "Guest"
+                ),
+            userAuthId = AuthenticationService.Instance.PlayerId
+        };
+
+        // converting the user class to a json object for sirialization.
+        string payload = JsonUtility.ToJson(userData);
+
+        // converting the json string to a byte array to be sent as a connection payload.
+        byte[] payloadbytes = Encoding.UTF8.GetBytes(payload);
+
+        // setting the connection data to be sent to the server on connect.
+        NetworkManager.Singleton.NetworkConfig.ConnectionData = payloadbytes;
+
+        // Now starting host on.
+        NetworkManager.Singleton.StartHost();
+
+        NetworkManager.Singleton.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
+    }
+
     private IEnumerator HeartBeatLobby(float waitTimeSeconds)
     {
         /*<script> Lobbies on UGS must be pingged every 15 seconds to keep the lobby alive or else

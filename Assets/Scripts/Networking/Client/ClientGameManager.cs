@@ -91,6 +91,31 @@ public class ClientGameManager : IDisposable
         // Here there is no scene change because the server takes care of this for all clients.
     }
 
+    public void StartLanClient()
+    {
+        // making a new user data object to then convert to json and send to the server.
+        UserData userData = new UserData
+        {
+            userName = PlayerPrefs.GetString(
+                NameSelector.PLAYERNAMEKEY,
+                "Guest"
+                ),
+            userAuthId = AuthenticationService.Instance.PlayerId
+        };
+
+        // converting the user class to a json object for sirialization.
+        string payload = JsonUtility.ToJson(userData);
+
+        // converting the json string to a byte array to be sent as a connection payload.
+
+        byte[] payloadbytes = Encoding.UTF8.GetBytes(payload);
+
+        // setting the connection data to be sent to the server on connect.
+        NetworkManager.Singleton.NetworkConfig.ConnectionData = payloadbytes;
+
+        // Now starting host on the relay service given by unity instead of a local server.
+        NetworkManager.Singleton.StartClient();
+    }
     public void Dispose()
     {
         networkClient?.Dispose();

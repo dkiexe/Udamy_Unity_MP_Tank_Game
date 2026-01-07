@@ -14,4 +14,16 @@ public class MainMenuScript : MonoBehaviour
     {
         await ClientSingelton.Instance.GameManager.StartClientAsync(joinCodeField.text);
     }
+
+    public void StartLanServer()
+    {
+        if (!LanPortCheck.IsPortUsed())
+        {
+            HostSingelton.Instance.GameManager.StartLanHost();
+        }
+        else
+        {
+            ClientSingelton.Instance.GameManager.StartLanClient();
+        }
+    }
 }
