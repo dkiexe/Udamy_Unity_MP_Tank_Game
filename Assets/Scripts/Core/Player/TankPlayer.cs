@@ -18,7 +18,6 @@ public class TankPlayer : NetworkBehaviour
     [SerializeField] private Color OwnerMinimapColor = Color.blue;
 
     public NetworkVariable<FixedString32Bytes> PlayerName = new NetworkVariable<FixedString32Bytes>();
-    public NetworkVariable<Vector3> SpawnPos = new NetworkVariable<Vector3>();
 
     public static event Action<TankPlayer> OnPlayerSpawned;
     public static event Action<TankPlayer> OnPlayerDespawned;
@@ -37,19 +36,11 @@ public class TankPlayer : NetworkBehaviour
                 OwnerClientId
             );
             PlayerName.Value = userData.userName;
-            PlayerSpawnHandler.ReassignSpawnPosClient(this);
             OnPlayerSpawned?.Invoke(this);
         }
 
         if (IsOwner)
         {
-            // This line makes the client's player teleport and take a position accoarding to a server, 
-            // the server cannot do this directly becasue it lacks authority to move the client.
-            GetComponent<NetworkTransform>().Teleport(
-                SpawnPos.Value, 
-                Quaternion.identity, 
-                transform.localScale
-            );
             TankCam.Priority = OwnerCamPriority;
             MinimapIconSprite.color = OwnerMinimapColor;
         }

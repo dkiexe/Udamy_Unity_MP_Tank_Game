@@ -23,7 +23,6 @@ public class PlayerMovement : NetworkBehaviour // NetworkBehaviour is used to ac
     {
         if (!IsOwner) return;
         inputReader.MoveEvent += HandleMove;
-        previousMovementInput = (Vector2) transform.position;
     }
     public override void OnNetworkDespawn()
     {

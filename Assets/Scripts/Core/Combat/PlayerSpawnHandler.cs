@@ -64,16 +64,12 @@ public class PlayerSpawnHandler : NetworkBehaviour
 
         TankPlayer newPlayerGameObject = Instantiate
             (
-                playerPrefab
+                playerPrefab,
+                SpawnPoint.GetRandomSpawnPos(), 
+                Quaternion.identity
             );
 
         newPlayerGameObject.NetworkObject.SpawnAsPlayerObject(ownerClientID);
-        ReassignSpawnPosClient(newPlayerGameObject);
         newPlayerGameObject.Wallet.TotalCoins.Value += coinValueAfterDeath;
-    }
-
-    public static void ReassignSpawnPosClient(TankPlayer tankPlayer)
-    {
-        tankPlayer.SpawnPos.Value = SpawnPoint.GetRandomSpawnPos();
     }
 }

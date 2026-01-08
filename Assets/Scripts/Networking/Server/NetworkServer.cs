@@ -47,6 +47,7 @@ public class NetworkServer : IDisposable
         authID_TO_UserData[userData.userAuthId] = userData;
 
         response.Approved = true; // Approving all connections for now
+        response.Position = SpawnPoint.GetRandomSpawnPos(); // setting a random spawn position for the player
         response.CreatePlayerObject = true; // let the network manager create a player object for the connection
     }
     
