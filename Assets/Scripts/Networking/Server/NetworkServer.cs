@@ -12,6 +12,8 @@ public class NetworkServer : IDisposable
     /// </summary>
     private NetworkManager networkManager;
 
+    public event Action<string> OnClientLeft;
+
     // Dictionary UGS server id to a UGS authintication id.
     private Dictionary<ulong, string> clientNetworkID_TO_AuthID = new Dictionary<ulong, string>();
 
@@ -68,6 +70,7 @@ public class NetworkServer : IDisposable
         if (!clientNetworkID_TO_AuthID.TryGetValue(clientNetworkID, out string authID)) return;
         clientNetworkID_TO_AuthID.Remove(clientNetworkID);
         authID_TO_UserData.Remove(authID);
+        OnClientLeft?.Invoke(authID);
     }
 
     public UserData GetUserDataFromClientID(ulong ClientId)

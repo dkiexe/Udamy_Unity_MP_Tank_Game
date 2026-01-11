@@ -126,7 +126,10 @@ public class HostGameManager : IDisposable
         transport.SetRelayServerData(relayServerData); // notifying the NetworkManager's transport object about the relay server
 
         // Now starting host on the relay service given by unity instead of a local server.
-        NetworkManager.Singleton.StartHost(); 
+        NetworkManager.Singleton.StartHost();
+
+        // Subscribing to an event to handle when a client leaves the server.
+        networkServer.OnClientLeft += HandleClientLeft;
 
         NetworkManager.Singleton.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
     }
@@ -174,14 +177,34 @@ public class HostGameManager : IDisposable
         }
     }
 
-    public async void Dispose()
+    private async void HandleClientLeft(string authID)
+    {
+        try
+        {
+            await LobbyService.Instance.RemovePlayerAsync(
+                lobbyId,
+                authID
+                );
+        }
+        catch (LobbyServiceException e)
+        {
+            Debug.Log(e);
+        }
+    }
+
+    public void Dispose()
+    {
+        Shutdown();
+    }
+
+    public async void Shutdown()
     {
         try
         {
             // stopping the heartbeat coroutine by name to stop pinging UGS about this lobby.
             HostSingelton.Instance.StopCoroutine(nameof(HeartBeatLobby));
 
-            if (!String.IsNullOrEmpty(lobbyId))
+            if (!string.IsNullOrEmpty(lobbyId))
             {
                 try
                 {
@@ -194,6 +217,9 @@ public class HostGameManager : IDisposable
 
                 lobbyId = string.Empty;
             }
+            
+            networkServer.OnClientLeft -= HandleClientLeft;
+
             networkServer?.Dispose();
         }
         catch (NullReferenceException) { }

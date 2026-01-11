@@ -29,8 +29,14 @@ public class NetworkClient : IDisposable
         AND if the clientId doesn't match the local id, we exit early. To put this more plainly,
         IF we are NOT the host AND we are NOT the local client, EXIT EARLY.
         */
-        if (clientNetworkID != 0 && clientNetworkID != networkManager.LocalClientId) { return; }
+        if (clientNetworkID != 0 && clientNetworkID != networkManager.LocalClientId) return;
+
+        Disconnect();
         
+    }
+
+    public void Disconnect()
+    {
         if (SceneManager.GetActiveScene().name != MAIN_SCENE_NAME)
         {
             SceneManager.LoadScene(MAIN_SCENE_NAME);

@@ -116,6 +116,12 @@ public class ClientGameManager : IDisposable
         // Now starting host on the relay service given by unity instead of a local server.
         NetworkManager.Singleton.StartClient();
     }
+
+    public void Disconnect()
+    {
+        networkClient.Disconnect();
+    }
+
     public void Dispose()
     {
         networkClient?.Dispose();
