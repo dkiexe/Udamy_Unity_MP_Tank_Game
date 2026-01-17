@@ -444,6 +444,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -737,6 +738,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ApplicationController
   clientPrefab: {fileID: 277179533525760945, guid: 681172c6fb88a7c4da8d0becae5aa28f, type: 3}
   hostPrefab: {fileID: 8428251166350763679, guid: fdf657e224050724f9b3c43a35b48fc0, type: 3}
+  serverPrefab: {fileID: 6364352786634178812, guid: a8beee97855706a418e315f239defea4, type: 3}
 --- !u!1 &2128509196
 GameObject:
   m_ObjectHideFlags: 0
@@ -771,6 +773,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &2128509198
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -816,6 +819,7 @@ SpriteRenderer:
   m_SortingLayerID: 2054658733
   m_SortingLayer: -1
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 8c047446bddecdc49b5528ddb1900b09, type: 3}
   m_Color: {r: 0.27450982, g: 0.27450982, b: 0.27450982, a: 1}
   m_FlipX: 0
@@ -825,7 +829,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

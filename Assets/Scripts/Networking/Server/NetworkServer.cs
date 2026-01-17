@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 
 public class NetworkServer : IDisposable
@@ -32,6 +33,13 @@ public class NetworkServer : IDisposable
         networkManager.ConnectionApprovalCallback += ApprovalCheck;
         // Subscribing to server started event ( gets called after a server is fully initialized. ).
         networkManager.OnServerStarted += OnNetworkReady;
+    }
+
+    public bool OpenConnection(string IP, int port)
+    {
+        UnityTransport unityNetwrokTransport = networkManager.GetComponent<UnityTransport>();
+        unityNetwrokTransport.SetConnectionData(IP, (ushort) port);
+        return networkManager.StartServer();
     }
 
     private void ApprovalCheck(
