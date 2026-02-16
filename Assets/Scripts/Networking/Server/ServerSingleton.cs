@@ -38,14 +38,13 @@ public class ServerSingelton : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public async Task CreateServer()
+    public void CreateServer()
     {
-        await UnityServices.InitializeAsync(); // attempt to connect to the UGS services.
+        ApplicationData appdata = new ApplicationData();
         GameManager = new ServerGameManager
             (
                 ApplicationData.IP(),
                 ApplicationData.Port(),
-                ApplicationData.QPort(),
                 NetworkManager.Singleton
             );
     }

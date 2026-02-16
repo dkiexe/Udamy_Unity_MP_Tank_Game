@@ -3,19 +3,34 @@ using UnityEngine;
 
 public class MainMenuScript : MonoBehaviour
 {
+    [SerializeField] private TMP_Text queueStatusText;
+    [SerializeField] private TMP_Text queueTimerText;
+    [SerializeField] private TMP_Text findMatchButtonText;
     [SerializeField] private TMP_InputField joinCodeField;
 
-    public async void StartHost()
+    private void Start()
     {
-        await HostSingelton.Instance.GameManager.StartHostAsync();
+        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto); // Reset the cursor back to default mouse.
+        queueStatusText.text = string.Empty;
+        queueTimerText.text = string.Empty;
     }
 
-    public async void StartClient()
+    public async void StartRelayHost()
     {
-        await ClientSingelton.Instance.GameManager.StartClientAsync(joinCodeField.text);
+        await HostSingelton.Instance.GameManager.StartRelayHostAsync();
     }
 
-    public void StartLanServer()
+    public async void StartRelayClient()
+    {
+        await ClientSingelton.Instance.GameManager.StartRelayClientAsync(joinCodeField.text);
+    }
+
+    public async void StartMatchMakerClient()
+    {
+        await ClientSingelton.Instance.GameManager.StartMatchmakerClientAsync(queueStatusText, queueTimerText);
+    }
+
+    public void StartLanPlay()
     {
         if (!LanPortCheck.IsPortUsed())
         {
@@ -23,7 +38,7 @@ public class MainMenuScript : MonoBehaviour
         }
         else
         {
-            ClientSingelton.Instance.GameManager.StartLanClient();
+            ClientSingelton.Instance.GameManager.StartClient();
         }
     }
 }

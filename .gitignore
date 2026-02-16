@@ -98,3 +98,20 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Build folders
+bin/
+obj/
+
+# User-specific
+*.user
+*.suo
+
+# SQLite databases
+*.sqlite
+*.db
+
+# Unity
+Library/
+Temp/
+Logs/

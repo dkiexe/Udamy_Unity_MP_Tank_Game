@@ -37,7 +37,7 @@ public class HostGameManager : IDisposable
 
     public NetworkServer networkServer { get; private set; }
 
-    public async Task StartHostAsync()
+    public async Task StartRelayHostAsync()
     {
         // requesting a relay allocation from UGS with an X amount of max connections
         try
@@ -199,29 +199,24 @@ public class HostGameManager : IDisposable
 
     public async void Shutdown()
     {
+        if (string.IsNullOrEmpty(lobbyId)) return;
+
+        // stopping the heartbeat coroutine by name to stop pinging UGS about this lobby.
+        HostSingelton.Instance.StopCoroutine(nameof(HeartBeatLobby));
+
         try
         {
-            // stopping the heartbeat coroutine by name to stop pinging UGS about this lobby.
-            HostSingelton.Instance.StopCoroutine(nameof(HeartBeatLobby));
-
-            if (!string.IsNullOrEmpty(lobbyId))
-            {
-                try
-                {
-                    await LobbyService.Instance.DeleteLobbyAsync(lobbyId);
-                }
-                catch (LobbyServiceException e)
-                {
-                    Debug.Log(e);
-                }
-
-                lobbyId = string.Empty;
-            }
-            
-            networkServer.OnClientLeft -= HandleClientLeft;
-
-            networkServer?.Dispose();
+            await LobbyService.Instance.DeleteLobbyAsync(lobbyId);
         }
-        catch (NullReferenceException) { }
+        catch (LobbyServiceException e)
+        {
+            Debug.Log(e);
+        }
+
+        lobbyId = string.Empty;
+            
+        networkServer.OnClientLeft -= HandleClientLeft;
+
+        networkServer?.Dispose();
     }
 }

@@ -1,6 +1,9 @@
 using System;
+using System.Collections;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using TMPro;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Networking.Transport.Relay;
@@ -27,6 +30,12 @@ public class ClientGameManager : IDisposable
 
     private const string MenuSceneName = "Menu";
 
+    private Coroutine clearTxtCoroutine;
+
+    private Coroutine QueueTimerCorutine;
+
+    private bool isQueuedMatchMaking = false;
+
     public async Task<bool> InitAsync()
     {
         // initalize unity services, this must be done every time when wanting to use unity services.
@@ -46,7 +55,7 @@ public class ClientGameManager : IDisposable
         SceneManager.LoadScene(MenuSceneName);
     }
 
-    public async Task StartClientAsync(string joinCode)
+    public async Task StartRelayClientAsync(string joinCode)
     {
         try
         {
@@ -65,33 +74,12 @@ public class ClientGameManager : IDisposable
 
         transport.SetRelayServerData(relayServerData); // notifying the NetworkManager's transport object about the relay server
 
-        // making a new user data object to then convert to json and send to the server.
-        UserData userData = new UserData
-        {
-            userName = PlayerPrefs.GetString(
-                NameSelector.PLAYERNAMEKEY,
-                "Guest"
-                ),
-            userAuthId = AuthenticationService.Instance.PlayerId
-        };
-        
-        // converting the user class to a json object for sirialization.
-        string payload = JsonUtility.ToJson(userData);
-
-        // converting the json string to a byte array to be sent as a connection payload.
-
-        byte[] payloadbytes = Encoding.UTF8.GetBytes(payload);
-
-        // setting the connection data to be sent to the server on connect.
-        NetworkManager.Singleton.NetworkConfig.ConnectionData = payloadbytes;
-
-        // Now starting host on the relay service given by unity instead of a local server.
-        NetworkManager.Singleton.StartClient();
+        StartClient();
 
         // Here there is no scene change because the server takes care of this for all clients.
     }
 
-    public void StartLanClient()
+    public void StartClient()
     {
         // making a new user data object to then convert to json and send to the server.
         UserData userData = new UserData
@@ -115,6 +103,89 @@ public class ClientGameManager : IDisposable
 
         // Now starting host on the relay service given by unity instead of a local server.
         NetworkManager.Singleton.StartClient();
+    }
+
+    public async Task StartMatchmakerClientAsync(TMP_Text queueStatusText, TMP_Text queueTimerText)
+    {
+        if (isQueuedMatchMaking) return;
+
+        isQueuedMatchMaking = true;
+
+        string userName = PlayerPrefs.GetString(
+            NameSelector.PLAYERNAMEKEY,
+            "Guest"
+        );
+
+        TCP_MatchMakingClient MatchMakingClient = new TCP_MatchMakingClient();
+        
+        if (clearTxtCoroutine != null) ClientSingelton.Instance.StopCoroutine(clearTxtCoroutine);
+
+        queueStatusText.text = "Connecting To MatchMaking Server...";
+        
+        QueueTimerCorutine = ClientSingelton.Instance.StartCoroutine(TimeUtils.QueueTimer(queueTimerText));
+
+        NetworkOperationResult NOP_Login = await MatchMakingClient.LogInAsync(userName);
+        
+        if (!NOP_Login.success)
+        {
+            StopMatchSearch(NOP_Login.message[0], queueStatusText, queueTimerText);
+            return;
+        }
+        
+        queueStatusText.text = "Searching For Game...";
+
+        NetworkOperationResult NOP_Assignment = await MatchMakingClient.AwaitServerAssignmentAsync();
+
+        if (!NOP_Assignment.success)
+        {
+            StopMatchSearch(NOP_Assignment.message[0], queueStatusText, queueTimerText);
+            return;
+        }
+
+        string CMD = NOP_Assignment.message[0];
+        Memory<string> Args = NOP_Assignment.message.AsMemory(1);
+
+        switch (CMD)
+        {
+            case "CONNECT":
+                {
+                    queueStatusText.text = "Connecting...";
+                    string ip = Args.Span[0];
+                    int port = int.Parse(Args.Span[1]);
+
+                    UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+                    transport.SetConnectionData(ip, (ushort)port);
+                    StartClient();
+                    break;
+                }
+            case "BANNED":
+                {
+                    queueStatusText.text = "MatchMaking Servers Refused ";
+                    break;
+                }
+            default:
+                {
+                    Debug.LogError($"MatchMaking Server Responded with {CMD}, This Message Header Is unhandled!");
+                    break;
+                }
+        }
+        isQueuedMatchMaking = false;
+        await MatchMakingClient.DisposeAsync(); // Not needed anymore after getting server assignment.
+    }
+
+    private void StopMatchSearch(string reason, TMP_Text queueStatusText, TMP_Text queueTimerText)
+    {
+        queueStatusText.text = reason;
+        clearTxtCoroutine = ClientSingelton.Instance.StartCoroutine(clearMatchMakingUI(queueStatusText, queueTimerText));
+        ClientSingelton.Instance.StopCoroutine(QueueTimerCorutine);
+        isQueuedMatchMaking = false;
+    }
+
+    private IEnumerator clearMatchMakingUI(TMP_Text queueStatusText, TMP_Text queueTimerText)
+    {
+        yield return new WaitForSeconds(5);
+        queueStatusText.text = string.Empty;
+        queueTimerText.text = string.Empty;
     }
 
     public void Disconnect()

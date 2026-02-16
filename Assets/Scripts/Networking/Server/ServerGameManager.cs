@@ -1,6 +1,8 @@
 using System;
 using System.Threading.Tasks;
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
+using Unity.VectorGraphics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,43 +10,57 @@ public class ServerGameManager : IDisposable
 {
     private string serverIP;
     private int serverPort;
-    private int serverQPort;
-    private NetworkServer networkServer;
-    private MultiplayAllocationService multiplayAllocationService;
+    private NetworkManager networkManager;
+    public NetworkServer networkServer { get; private set; }
 
     private const string gameSceneName = "Game";
 
     public ServerGameManager(
         string serverIP, 
         int serverPort,  // ServerPort -> Is a port that is used for the game to run on
-        int serverQPort, // ServerQPort -> ( Query Port ) Is a port that is used for server analytics like health, status, etc..
-        NetworkManager manager
+        NetworkManager networkManager
         )
     {
         this.serverIP = serverIP;
         this.serverPort = serverPort;
-        this.serverQPort = serverQPort;
-        networkServer = new NetworkServer(manager);
-        multiplayAllocationService = new MultiplayAllocationService();
+        this.networkManager = networkManager;
+        networkServer = new NetworkServer(networkManager);
     }
 
-    public async Task StartGameServerAsync()
+    public async Task StartGameServer()
     {
-        // This starts the loop that tells UGS and us the status of our server and its health.
-        await multiplayAllocationService.BeginServerCheck();
-
-        if (!networkServer.OpenConnection(serverIP, serverPort))
+        if (networkServer.OpenConnection(serverIP, serverPort))
         {
-            Debug.LogError("NetworkServer did not start as expected.");
-            return;
+            int serverID = PlayerPrefs.GetInt("id");
+
+            UnityTransport transport = networkManager.GetComponent<UnityTransport>();
+
+            string address = transport.ConnectionData.Address;
+            ushort port = transport.ConnectionData.Port;
+
+            TCP_MatchMakingServer tCP_MatchMakingServer = new TCP_MatchMakingServer();
+
+            await tCP_MatchMakingServer.LogInAsync(serverID); // login to match making servers as server.
+
+            _ = tCP_MatchMakingServer.HeartBeat(); // keeps server alive 
+
+            Debug.Log("\n =============================== ");
+            Debug.Log("\n Server started successfull");
+            Debug.Log($"\n Server ID: {serverID}");
+            Debug.Log($"\n Server running on IP: {address} : Port : {port} Protocol : {transport.Protocol}");
+            Debug.Log($"\n Server Listening Status : {networkManager.IsListening}");
+            Debug.Log("\n =============================== ");
+
+            networkManager.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
         }
-        // Changing scene.
-        NetworkManager.Singleton.SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
+        else
+        {
+            Debug.LogError("\n {!!!} Server failed to start...");
+        }
     }
 
     public void Dispose()
     {
         networkServer?.Dispose();
-        multiplayAllocationService?.Dispose();
     }
 }

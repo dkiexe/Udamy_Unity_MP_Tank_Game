@@ -35,7 +35,7 @@ public class LobbiesList : MonoBehaviour
 
             string joinCode = joinedLobby.Data["JoinCode"].Value;
 
-            await ClientSingelton.Instance.GameManager.StartClientAsync(joinCode);
+            await ClientSingelton.Instance.GameManager.StartRelayClientAsync(joinCode);
         }
         catch (LobbyServiceException e)
         {

@@ -21,7 +21,7 @@ public class ApplicationData
 
     const string IPCmd = "ip";
     const string PortCmd = "port";
-    const string QueryPortCmd = "queryPort";
+    const string IDCmd = "id";
 
     public static string IP()
     {
@@ -33,22 +33,17 @@ public class ApplicationData
         return PlayerPrefs.GetInt(PortCmd);
     }
 
-    public static int QPort()
-    {
-        return PlayerPrefs.GetInt(QueryPortCmd);
-    }
-
     //Ensure this gets instantiated Early on
     public ApplicationData()
     {
-        SetIP("127.0.0.1");
+        SetIP("0.0.0.0");
         SetPort("7777");
-        SetQueryPort("7787");
+        SetID("0");
         
         // Specify supported commands and their handlers
         m_CommandDictionary["-" + IPCmd] = SetIP;
         m_CommandDictionary["-" + PortCmd] = SetPort;
-        m_CommandDictionary["-" + QueryPortCmd] = SetQueryPort;
+        m_CommandDictionary["-" + IDCmd] = SetID;
 
         // Process command line arguments.
         ProcessCommandLinearguments(Environment.GetCommandLineArgs());
@@ -111,15 +106,15 @@ public class ApplicationData
         }
     }
 
-    void SetQueryPort(string qPortArgument)
+    void SetID(string ID_Argument)
     {
-        if (int.TryParse(qPortArgument, out int parsedQPort))
+        if (int.TryParse(ID_Argument, out int parsedID))
         {
-            PlayerPrefs.SetInt(QueryPortCmd, parsedQPort);
+            PlayerPrefs.SetInt(IDCmd, parsedID);
         }
         else
         {
-            Debug.LogError($"{qPortArgument} does not contain a parseable query port!");
+            Debug.LogError($"{ID_Argument} does not contain a parseable ID!");
         }
     }
 

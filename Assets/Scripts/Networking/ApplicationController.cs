@@ -29,9 +29,9 @@ public class ApplicationController : MonoBehaviour
         {
             ServerSingelton serverSingelton = Instantiate(serverPrefab);
             
-            await serverSingelton.CreateServer();
+            serverSingelton.CreateServer();
 
-            await serverSingelton.GameManager.StartGameServerAsync();
+            await serverSingelton.GameManager.StartGameServer();
         }
         else
         {

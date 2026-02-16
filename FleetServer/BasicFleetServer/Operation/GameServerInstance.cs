@@ -1,0 +1,75 @@
+using FleetServerUtils;
+using System.Diagnostics;
+
+namespace BasicFleetServer.Operation
+{
+    public class GameServerInstance : IAsyncDisposable
+    {
+        public Process? gameServerProcess { get; private set; }
+        public int GameServerID { get; private set; }
+        public string GameIP { get; private set; }
+        public int GamePort { get; private set; }
+        public int GAME_MMR { get; private set; }
+
+        public List<MM_User> Players = new List<MM_User>();
+
+        private string pathToExE;
+
+        private const int MaxPlayers = 10;
+
+        public bool isFull => Players.Count > MaxPlayers;
+
+        public GameServerInstance(int ID, int MMR, string IP, int Port, string pathToExE)
+        {
+            GAME_MMR = MMR;
+            GameServerID = ID;
+            GameIP = IP;
+            GamePort = Port;
+
+            this.pathToExE = pathToExE;
+        }
+
+        public void StartSelf()
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = pathToExE,
+                Arguments = $"-ip {GameIP} -port {GamePort}",
+                UseShellExecute = true,
+                CreateNoWindow = false,
+
+            };
+            try
+            {
+                Process? process = Process.Start(startInfo);
+
+                if (process == null || process.HasExited)
+                {
+                    Console.WriteLine($"[!] Err! on {GameServerID} : Failed to start game server process.");
+                }
+                else
+                {
+                    gameServerProcess = process;
+                }
+            }
+            catch (SystemException)
+            {
+                Console.WriteLine($"[!] Err! Failed to start any game server process. Did you forget to specify a path for a Game Server? ");
+                Environment.Exit(1);
+            }
+        }
+        public async Task StopSelf()
+        {
+            if (gameServerProcess != null && !gameServerProcess.HasExited)
+            {
+                gameServerProcess.Kill();
+                await gameServerProcess.WaitForExitAsync();
+            }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await StopSelf();
+        }
+    }
+}
