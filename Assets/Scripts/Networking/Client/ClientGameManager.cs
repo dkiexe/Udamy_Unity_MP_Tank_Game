@@ -214,7 +214,7 @@ public class ClientGameManager : IDisposable
 
     public void Dispose()
     {
-        MM_cancelSource.Dispose();
+        if (MM_cancelSource != null) MM_cancelSource.Dispose();
         networkClient?.Dispose();
     }
 }
