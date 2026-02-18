@@ -2764,6 +2764,11 @@ MonoBehaviour:
   queueTimerText: {fileID: 445143837}
   findMatchButtonText: {fileID: 530392927}
   joinCodeField: {fileID: 1986145679}
+  MM_Button: {fileID: 261802580}
+  HostButton: {fileID: 1309939205}
+  ClientButton: {fileID: 695338238}
+  LobbiesButton: {fileID: 1377921675}
+  LanButton: {fileID: 613190104}
 --- !u!1 &1522933259
 GameObject:
   m_ObjectHideFlags: 0
