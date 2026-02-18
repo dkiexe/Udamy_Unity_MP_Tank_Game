@@ -19,6 +19,7 @@ namespace BasicFleetServer.Operation
         // Events
         public static event AsyncEventHandler<(string, string)>? newUserConnectEvent;
         public static event AsyncEventHandler<int>? newGameServerConnectEvent;
+        public static event Action<string>? userDisconnectEvent;
 
         // IP to TcpClient object mapping for user connections.
         public Dictionary<string, TcpClient>? UserConnectedClients;
@@ -208,6 +209,7 @@ namespace BasicFleetServer.Operation
             {
                 case SocketType.ForUsers:
                     UserConnectedClients!.Remove(networkIdentity.IPAddress!);
+                    userDisconnectEvent?.Invoke(networkIdentity.IPAddress!);
                     break;
 
                 case SocketType.ForGameServers:

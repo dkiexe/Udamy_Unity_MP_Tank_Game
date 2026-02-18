@@ -27,7 +27,11 @@ public class MainMenuScript : MonoBehaviour
 
     public async void StartMatchMakerClient()
     {
-        await ClientSingelton.Instance.GameManager.StartMatchmakerClientAsync(queueStatusText, queueTimerText);
+        await ClientSingelton.Instance.GameManager.StartMatchmakerClientAsync(
+            queueStatusText, 
+            queueTimerText,
+            findMatchButtonText
+            );
     }
 
     public void StartLanPlay()

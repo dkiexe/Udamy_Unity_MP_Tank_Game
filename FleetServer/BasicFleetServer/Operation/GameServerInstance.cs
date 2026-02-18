@@ -11,7 +11,7 @@ namespace BasicFleetServer.Operation
         public int GamePort { get; private set; }
         public int GAME_MMR { get; private set; }
 
-        public List<MM_User> Players = new List<MM_User>();
+        public SortedSet<MM_User> Players = new SortedSet<MM_User>();
 
         private string pathToExE;
 

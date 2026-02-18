@@ -18,12 +18,19 @@ namespace BasicFleetServer.Operation
 
         public DataBaseManager dbManager;
 
-        private Dictionary<int, List<MM_User>> WaitingRooms = new Dictionary<int, List<MM_User>>();
+        // All connected MatchMaking Users Objects by IP.
+        private Dictionary<string, MM_User> ALL_ConnectedUsers = new Dictionary<string, MM_User>();
 
+        // MatchMaking Players waiting for Match by MMR.
+        private Dictionary<int, SortedSet<MM_User>> WaitingRooms = new Dictionary<int, SortedSet<MM_User>>();
+
+        // GameServer Instance object Lists by MMR.
         private Dictionary<int, List<GameServerInstance>> ActiveGameServerRooms = new Dictionary<int, List<GameServerInstance>>();
 
+        // GameServerInstances + MMR asignment awaiting spin up by GameServerID
         private Dictionary<int, (int, GameServerInstance)> GameServerSpinUpPool = new Dictionary<int, (int, GameServerInstance)>();
-
+        
+        // EVENTS.
         public static event AsyncEventHandler<(string[], string)>? SocketMessageEvent;
 
         public static event AsyncEventHandler<(string, string)>? bannedClientConnectedEvent;
@@ -32,8 +39,9 @@ namespace BasicFleetServer.Operation
 
         public GS_Manager(FleetApplicationData fleetAppdata)
         {
-            newUserConnectEvent += HandleNewClientConnected;
-            newGameServerConnectEvent += RegisterServer;
+            newUserConnectEvent += RegisterNewUser;
+            newGameServerConnectEvent += RegisterNewServer;
+            userDisconnectEvent += UnRegisterUser;
             this.fleetAppdata = fleetAppdata;
             dbManager = new DataBaseManager(fleetAppdata.databasePath);
             LocalIP = UtilsForIP.GetLanIP()!;
@@ -43,7 +51,7 @@ namespace BasicFleetServer.Operation
                 throw new NoNullAllowedException($"Failed To fetch LocalIP address!");
             }
         }
-        
+
         public void GenerateGameServer(int MMR)
         {
             GameServerInstance serverInstance = new GameServerInstance(
@@ -57,9 +65,10 @@ namespace BasicFleetServer.Operation
             GameServerSpinUpPool[serverInstance.GameServerID] = (MMR, serverInstance);
         }
 
-        public async Task HandleNewClientConnected(object _, (string clientIP, string clientName) e)
+        public async Task RegisterNewUser(object _, (string clientIP, string clientName) e)
         {
             MM_User connectedUser = await dbManager.ReadPlayerInfoByIP(e.clientIP, e.clientName);
+            ALL_ConnectedUsers[e.clientIP] = connectedUser;
 
             // Handle Banned Users.
             if (connectedUser.IsBanned)
@@ -87,12 +96,12 @@ namespace BasicFleetServer.Operation
                     }
                 }
             }
-            List<MM_User>? MMR_room = null;
+            SortedSet<MM_User>? MMR_room = null;
 
             // Matchmaking process
             if (!WaitingRooms.TryGetValue(connectedUser.MMR, out MMR_room)) 
             {
-                MMR_room = new List<MM_User>();
+                MMR_room = new SortedSet<MM_User>();
                 WaitingRooms[connectedUser.MMR] = MMR_room;
             }
             
@@ -131,7 +140,7 @@ namespace BasicFleetServer.Operation
             WaitingRooms[user.MMR].Remove(user);
         }
 
-        private async Task RegisterServer(object _, int GameServerID)
+        private async Task RegisterNewServer(object _, int GameServerID)
         {
             try
             {
@@ -141,7 +150,7 @@ namespace BasicFleetServer.Operation
                     out (int MMR_Assignment, GameServerInstance GameServerInstance) NewGameServerData
                     );
 
-                List<MM_User> WaitingRoom = WaitingRooms[NewGameServerData.MMR_Assignment];
+                SortedSet<MM_User> WaitingRoom = WaitingRooms[NewGameServerData.MMR_Assignment];
 
                 ServerCounter++;
 
@@ -153,10 +162,10 @@ namespace BasicFleetServer.Operation
             }
         }
 
-        private async Task MatchMake(GameServerInstance newGameServer, List<MM_User> MMR_room)
+        private async Task MatchMake(GameServerInstance newGameServer, SortedSet<MM_User> MMR_room)
         {
             newGameServer.Players = MMR_room;
-            int RoomMMR = MMR_room[0].MMR;
+            int RoomMMR = newGameServer.GAME_MMR;
 
             ActiveGameServerRooms.Add(RoomMMR, new List<GameServerInstance> { newGameServer });
             
@@ -175,6 +184,30 @@ namespace BasicFleetServer.Operation
             MMR_room.Clear();
         }
 
+
+        private void UnRegisterUser(string IP)
+        {
+            if (ALL_ConnectedUsers.TryGetValue(IP, out MM_User? user))
+            {
+                int UserMMR = user.MMR;
+                if (WaitingRooms[UserMMR].TryGetValue(user, out _))
+                {
+                    WaitingRooms[UserMMR].Remove(user);
+                }
+                else 
+                {
+                    if (ActiveGameServerRooms.TryGetValue(UserMMR, out List<GameServerInstance>? ActiveGameServerList))
+                    {
+                        foreach (GameServerInstance server in ActiveGameServerList)
+                        {
+                            if (server.Players.Remove(user)) break;
+                        }
+                    }
+                }
+                ALL_ConnectedUsers.Remove(IP);
+            }
+        }
+
         public async Task StopAllServers()
         {
             foreach (var MMRbracket in ActiveGameServerRooms)
@@ -188,8 +221,9 @@ namespace BasicFleetServer.Operation
 
         public async ValueTask DisposeAsync()
         {
-            newUserConnectEvent -= HandleNewClientConnected;
-            newGameServerConnectEvent -= RegisterServer;
+            newUserConnectEvent -= RegisterNewUser;
+            newGameServerConnectEvent -= RegisterNewServer;
+            userDisconnectEvent -= UnRegisterUser;
             ValueTask exitTask1 = dbManager.DisposeAsync();
             Task exitTask2 = StopAllServers();
             await Task.WhenAll([ exitTask1.AsTask(), exitTask2 ]);

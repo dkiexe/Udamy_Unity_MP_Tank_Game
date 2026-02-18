@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
-using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
 using Unity.Netcode;
@@ -35,6 +35,8 @@ public class ClientGameManager : IDisposable
     private Coroutine QueueTimerCorutine;
 
     private bool isQueuedMatchMaking = false;
+
+    private CancellationTokenSource MM_cancelSource;
 
     public async Task<bool> InitAsync()
     {
@@ -105,11 +107,25 @@ public class ClientGameManager : IDisposable
         NetworkManager.Singleton.StartClient();
     }
 
-    public async Task StartMatchmakerClientAsync(TMP_Text queueStatusText, TMP_Text queueTimerText)
+    public async Task StartMatchmakerClientAsync(
+        TMP_Text queueStatusText,
+        TMP_Text queueTimerText,
+        TMP_Text findMatchButtonText
+        )
     {
-        if (isQueuedMatchMaking) return;
+        if (isQueuedMatchMaking) // If we are already matchmaking Cancel it.
+        {
+            MM_cancelSource.Cancel();
+            StopMatchSearch("Canceled.", queueStatusText, queueTimerText);
+            isQueuedMatchMaking = false;
+            findMatchButtonText.text = "Find Match!";
+            return;
+        }
 
         isQueuedMatchMaking = true;
+        findMatchButtonText.text = "Cancel";
+
+        MM_cancelSource = new CancellationTokenSource();
 
         string userName = PlayerPrefs.GetString(
             NameSelector.PLAYERNAMEKEY,
@@ -124,21 +140,23 @@ public class ClientGameManager : IDisposable
         
         QueueTimerCorutine = ClientSingelton.Instance.StartCoroutine(TimeUtils.QueueTimer(queueTimerText));
 
-        NetworkOperationResult NOP_Login = await MatchMakingClient.LogInAsync(userName);
+        NetworkOperationResult NOP_Login = await MatchMakingClient.LogInAsync(userName, MM_cancelSource.Token);
         
         if (!NOP_Login.success)
         {
             StopMatchSearch(NOP_Login.message[0], queueStatusText, queueTimerText);
+            findMatchButtonText.text = "Find Match!";
             return;
         }
         
         queueStatusText.text = "Searching For Game...";
 
-        NetworkOperationResult NOP_Assignment = await MatchMakingClient.AwaitServerAssignmentAsync();
+        NetworkOperationResult NOP_Assignment = await MatchMakingClient.AwaitServerAssignmentAsync(MM_cancelSource.Token);
 
         if (!NOP_Assignment.success)
         {
             StopMatchSearch(NOP_Assignment.message[0], queueStatusText, queueTimerText);
+            findMatchButtonText.text = "Find Match!";
             return;
         }
 
@@ -165,6 +183,7 @@ public class ClientGameManager : IDisposable
                 }
             default:
                 {
+                    if (CMD == string.Empty) break;
                     Debug.LogError($"MatchMaking Server Responded with {CMD}, This Message Header Is unhandled!");
                     break;
                 }
@@ -195,6 +214,7 @@ public class ClientGameManager : IDisposable
 
     public void Dispose()
     {
+        MM_cancelSource.Dispose();
         networkClient?.Dispose();
     }
 }

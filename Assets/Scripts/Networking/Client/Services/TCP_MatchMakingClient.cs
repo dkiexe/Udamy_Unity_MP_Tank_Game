@@ -49,7 +49,7 @@ public class TCP_MatchMakingClient : IAsyncDisposable
         }
     }
 
-    public async Task<NetworkOperationResult> LogInAsync(string userName)
+    public async Task<NetworkOperationResult> LogInAsync(string userName, CancellationToken cancelToken)
     {
         client = new TcpClient();
         bool result = false;
@@ -63,7 +63,7 @@ public class TCP_MatchMakingClient : IAsyncDisposable
 
             string loginMessage = $"REGISTER|{userName}";
             byte[] data = Encoding.UTF8.GetBytes(loginMessage);
-            await networkDataStream.WriteAsync(data, 0, data.Length);
+            await networkDataStream.WriteAsync(data, 0, data.Length, cancelToken);
 
             result = true;
         }
@@ -79,6 +79,10 @@ public class TCP_MatchMakingClient : IAsyncDisposable
             Debug.LogWarning(ex);
             
         }
+        catch (OperationCanceledException)
+        {
+            msg.Add("MatchMaking Canceled.");
+        }
         catch (Exception ex)
         {
             msg.Add($"Failed to connect to matchmaking server: Unexpected error");
@@ -92,33 +96,42 @@ public class TCP_MatchMakingClient : IAsyncDisposable
     }
 
 
-    public async Task<NetworkOperationResult> AwaitServerAssignmentAsync()
+    public async Task<NetworkOperationResult> AwaitServerAssignmentAsync(CancellationToken MM_cancelToken)
     {
         bool result = false;
         List<string> msg = new List<string>();
         bool ExceptionHappend = false;
 
+        CancellationTokenSource HeartBeatCancelSource = new CancellationTokenSource();
+        CancellationTokenSource CombinedCancelSoruce = CancellationTokenSource.CreateLinkedTokenSource(
+            MM_cancelToken, HeartBeatCancelSource.Token
+        );
+
         try
         {
-            using (CancellationTokenSource HeartBeatCancelToken = new CancellationTokenSource())
-            {
-                Task HeartBeatTask = HeartBeat(networkDataStream, HeartBeatCancelToken.Token);
-                byte[] buffer = new byte[1024];
-                int bytesRead = await networkDataStream.ReadAsync(buffer, 0, buffer.Length);
+            Task HeartBeatTask = HeartBeat(networkDataStream, CombinedCancelSoruce.Token);
+            byte[] buffer = new byte[1024];
+            int bytesRead = await networkDataStream.ReadAsync(buffer, 0, buffer.Length);
 
-                string ServerMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                HeartBeatCancelToken.Cancel(); // stop heartbeat task once we received a server message.
-                await HeartBeatTask;
+            string ServerMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            CombinedCancelSoruce.Cancel(); // stop heartbeat task once we received a server message.
+            await HeartBeatTask;
 
-                msg = new List<string>(ServerMessage.Split("|"));
+            msg = new List<string>(ServerMessage.Split("|"));
 
-                result = true;
-            }
+            result = true;
         }
         catch (OperationCanceledException ex)
         {
-            msg.Add($"MatchMaking Failed Server Communication Distrupted On Client Side.");
-            Debug.LogWarning(ex);
+            if (MM_cancelToken.IsCancellationRequested) 
+            {
+                msg.Add("MatchMaking Canceled.");
+            }
+            else
+            {
+                msg.Add($"MatchMaking Failed Server Communication Distrupted On Client Side.");
+                Debug.LogWarning(ex);
+            }
         }
         catch (SocketException ex)
         {
@@ -129,7 +142,6 @@ public class TCP_MatchMakingClient : IAsyncDisposable
         {
             msg.Add($"MatchMaking Failed Server Communication Closed");
             Debug.LogWarning(ex);
-
         }
         catch (Exception ex)
         {
@@ -140,6 +152,8 @@ public class TCP_MatchMakingClient : IAsyncDisposable
 
         if (ExceptionHappend) await DisposeAsync();
 
+        HeartBeatCancelSource.Dispose();
+        CombinedCancelSoruce.Dispose();
         return new NetworkOperationResult { success = result, message = msg.ToArray() };
     }
 
