@@ -22,7 +22,7 @@ namespace BasicFleetServer.Operation
         private Dictionary<string, MM_User> ALL_ConnectedUsers = new Dictionary<string, MM_User>();
 
         // MatchMaking Players waiting for Match by MMR.
-        private Dictionary<int, SortedSet<MM_User>> WaitingRooms = new Dictionary<int, SortedSet<MM_User>>();
+        private Dictionary<int, HashSet<MM_User>> WaitingRooms = new Dictionary<int, HashSet<MM_User>>();
 
         // GameServer Instance object Lists by MMR.
         private Dictionary<int, List<GameServerInstance>> ActiveGameServerRooms = new Dictionary<int, List<GameServerInstance>>();
@@ -96,12 +96,12 @@ namespace BasicFleetServer.Operation
                     }
                 }
             }
-            SortedSet<MM_User>? MMR_room = null;
+            HashSet<MM_User>? MMR_room = null;
 
             // Matchmaking process
             if (!WaitingRooms.TryGetValue(connectedUser.MMR, out MMR_room)) 
             {
-                MMR_room = new SortedSet<MM_User>();
+                MMR_room = new HashSet<MM_User>();
                 WaitingRooms[connectedUser.MMR] = MMR_room;
             }
             
@@ -150,7 +150,7 @@ namespace BasicFleetServer.Operation
                     out (int MMR_Assignment, GameServerInstance GameServerInstance) NewGameServerData
                     );
 
-                SortedSet<MM_User> WaitingRoom = WaitingRooms[NewGameServerData.MMR_Assignment];
+                HashSet<MM_User> WaitingRoom = WaitingRooms[NewGameServerData.MMR_Assignment];
 
                 ServerCounter++;
 
@@ -162,7 +162,7 @@ namespace BasicFleetServer.Operation
             }
         }
 
-        private async Task MatchMake(GameServerInstance newGameServer, SortedSet<MM_User> MMR_room)
+        private async Task MatchMake(GameServerInstance newGameServer, HashSet<MM_User> MMR_room)
         {
             newGameServer.Players = MMR_room;
             int RoomMMR = newGameServer.GAME_MMR;

@@ -14,6 +14,10 @@ public class PlayerMovement : NetworkBehaviour // NetworkBehaviour is used to ac
 
     [SerializeField] private ParticleSystem dustCloud;
 
+    [SerializeField] private AudioClip AC_Idle;
+
+    [SerializeField] private AudioClip AC_move;
+
     [Header("Settings")]
     [SerializeField] private float moveSpeed = 4f; 
 
@@ -23,15 +27,28 @@ public class PlayerMovement : NetworkBehaviour // NetworkBehaviour is used to ac
 
     private const float ParticalPositionChangeThreshold = 0.005f;
 
+    private AudioSource audioSource;
+
     private Vector2 previousMovementInput;
 
     private Vector3 previousPos;
 
     private ParticleSystem.EmissionModule emissionModule;
 
+    private MovmentPhase currentPhase;
+
+    private enum MovmentPhase
+    {
+        Idle,
+        Move
+    }
+
     private void Awake()
     {
+        audioSource = GetComponent<AudioSource>();
         emissionModule = dustCloud.emission;
+
+        SwapPlayerAudio(MovmentPhase.Idle);
     }
 
     public override void OnNetworkSpawn()
@@ -47,7 +64,23 @@ public class PlayerMovement : NetworkBehaviour // NetworkBehaviour is used to ac
 
     public void HandleMove(Vector2 movmentInput)
     {
+        MovmentPhase NewMovmentPhase;
+        
         previousMovementInput = movmentInput;
+        if (movmentInput.magnitude > 0)
+        {
+            NewMovmentPhase = MovmentPhase.Move;
+        }
+        else
+        {
+            NewMovmentPhase = MovmentPhase.Idle;
+        }
+
+        if (currentPhase != NewMovmentPhase)
+        {
+            currentPhase = NewMovmentPhase;
+            SwapPlayerAudio(currentPhase);
+        }
     }
 
     void Update()
@@ -72,5 +105,12 @@ public class PlayerMovement : NetworkBehaviour // NetworkBehaviour is used to ac
 
         if (!IsOwner) return;
         rb.linearVelocity = (Vector2)bodyTransform.up * previousMovementInput.y * (moveSpeed * booster.boostValue.Value);
+    }
+
+    private void SwapPlayerAudio(MovmentPhase phase)
+    {
+        audioSource.Stop();
+        audioSource.clip = phase == MovmentPhase.Idle ? AC_Idle: AC_move ;
+        audioSource.Play();
     }
 }

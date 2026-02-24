@@ -8,6 +8,7 @@ public class ProjectileLauncherScript : NetworkBehaviour
     [SerializeField] private InputReader inputReader;
     [SerializeField] private CoinWallet wallet;
     [SerializeField] private Transform projectileSpawnPoint;
+    [SerializeField] private AudioSource shotAudioSource;
     [SerializeField] private GameObject ServerProjectilePrefab;
     [SerializeField] private GameObject ClientProjectilePrefab;
     [SerializeField] private GameObject muzzleFlash;
@@ -65,6 +66,7 @@ public class ProjectileLauncherScript : NetworkBehaviour
     {
         muzzleFlash.SetActive(true);
         muzzleFlashTimer = muzzleFlashDuration;
+        shotAudioSource.Play();
 
         GameObject projectileIntance = Instantiate(
             ClientProjectilePrefab,
