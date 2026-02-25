@@ -1,6 +1,6 @@
-using System;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class ProjectileLauncherScript : NetworkBehaviour
 {
@@ -20,6 +20,7 @@ public class ProjectileLauncherScript : NetworkBehaviour
     [SerializeField] private float muzzleFlashDuration;
     [SerializeField] private int CostToFire = 10;
 
+    private bool isPointerOverUI;
     private bool shouldFire;
     private float timer;
     private float muzzleFlashTimer;
@@ -46,6 +47,8 @@ public class ProjectileLauncherScript : NetworkBehaviour
         }
 
         if (!IsOwner) return;
+
+        isPointerOverUI = EventSystem.current.IsPointerOverGameObject();
 
         if (timer > 0) timer -= Time.deltaTime;
 
@@ -124,6 +127,11 @@ public class ProjectileLauncherScript : NetworkBehaviour
 
     private void HandlePrimaryFire(bool shouldFire)
     {
+        if (shouldFire)
+        {
+            // Ignore click if pointer is over UI.
+            if (isPointerOverUI) return;
+        }
         this.shouldFire = shouldFire;
     }
 }
