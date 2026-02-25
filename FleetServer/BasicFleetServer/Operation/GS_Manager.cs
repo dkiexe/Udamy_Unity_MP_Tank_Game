@@ -9,7 +9,7 @@ namespace BasicFleetServer.Operation
 
     internal class GS_Manager : IAsyncDisposable
     {
-        private const int MinPlayersToStartMatch = 1;
+        private const int MinPlayersToStartMatch = 2;
 
         private int ServerCounter = 0;
 
