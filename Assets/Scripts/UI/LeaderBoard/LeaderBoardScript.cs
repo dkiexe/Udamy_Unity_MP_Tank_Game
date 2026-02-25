@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
@@ -102,6 +101,8 @@ public class LeaderBoardScript : NetworkBehaviour
 
     private void HandleLeaderBoardEntitiesChanged(NetworkListEvent<LeaderBoardEntityState> changeEvent)
     {
+        if (!gameObject.scene.isLoaded) return;
+
         switch (changeEvent.Type)
         {
             case NetworkListEvent<LeaderBoardEntityState>.EventType.Add:
