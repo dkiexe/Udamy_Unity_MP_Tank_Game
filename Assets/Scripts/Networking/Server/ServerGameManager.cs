@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
-using Unity.VectorGraphics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -10,39 +9,44 @@ public class ServerGameManager : IDisposable
 {
     private string serverIP;
     private int serverPort;
+    private int serverID;
     private NetworkManager networkManager;
     public NetworkServer networkServer { get; private set; }
+
+    private TCP_MatchMakingServer tcp_MatchMakingServer;
 
     private const string gameSceneName = "Game";
 
     public ServerGameManager(
         string serverIP, 
         int serverPort,  // ServerPort -> Is a port that is used for the game to run on
+        int serverID,    // ServerID -> Is a unique ID that is used to identify the server on the matchmaking server
         NetworkManager networkManager
         )
     {
         this.serverIP = serverIP;
         this.serverPort = serverPort;
+        this.serverID = serverID;
         this.networkManager = networkManager;
         networkServer = new NetworkServer(networkManager);
+
+        networkServer.OnClientLeft += HandleClientLeave;
     }
 
     public async Task StartGameServer()
     {
         if (networkServer.OpenConnection(serverIP, serverPort))
         {
-            int serverID = PlayerPrefs.GetInt("id");
-
             UnityTransport transport = networkManager.GetComponent<UnityTransport>();
 
             string address = transport.ConnectionData.Address;
             ushort port = transport.ConnectionData.Port;
 
-            TCP_MatchMakingServer tCP_MatchMakingServer = new TCP_MatchMakingServer();
+            tcp_MatchMakingServer = new TCP_MatchMakingServer();
 
-            await tCP_MatchMakingServer.LogInAsync(serverID); // login to match making servers as server.
+            await tcp_MatchMakingServer.LogInAsync(serverID); // login to match making servers as server.
 
-            _ = tCP_MatchMakingServer.HeartBeat(); // keeps server alive 
+            _ = tcp_MatchMakingServer.HeartBeat(); // keeps server alive 
 
             Debug.Log("\n =============================== ");
             Debug.Log("\n Server started successfull");
@@ -57,6 +61,17 @@ public class ServerGameManager : IDisposable
         {
             Debug.LogError("\n {!!!} Server failed to start...");
         }
+    }
+
+    public async void StopGameServer(string reason)
+    {
+        await tcp_MatchMakingServer.LogOutAsync(serverID, reason);
+        Application.Quit();
+    }
+
+    private async void HandleClientLeave(string _, string ClientID)
+    {
+        await tcp_MatchMakingServer.msgUserDisconnect(ClientID);
     }
 
     public void Dispose()

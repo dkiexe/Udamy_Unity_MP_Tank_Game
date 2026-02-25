@@ -177,7 +177,7 @@ public class HostGameManager : IDisposable
         }
     }
 
-    private async void HandleClientLeft(string authID)
+    private async void HandleClientLeft(string authID, string _)
     {
         try
         {

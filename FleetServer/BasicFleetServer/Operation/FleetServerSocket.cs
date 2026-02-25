@@ -1,6 +1,5 @@
 ﻿
 using BasicFleetServer.Utils;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -20,6 +19,7 @@ namespace BasicFleetServer.Operation
         public static event AsyncEventHandler<(string, string)>? newUserConnectEvent;
         public static event AsyncEventHandler<int>? newGameServerConnectEvent;
         public static event Action<string>? userDisconnectEvent;
+        public static event Action<int>? serverDisconnectEvent;
 
         // IP to TcpClient object mapping for user connections.
         public Dictionary<string, TcpClient>? UserConnectedClients;
@@ -219,7 +219,23 @@ namespace BasicFleetServer.Operation
             await DisconnectClient(client);
         }
         
-        private async Task GameServerMessageReader(NetworkIdentity networkIdentity, string msg, string[] args) { }
+        private async Task GameServerMessageReader(NetworkIdentity networkIdentity, string msg, string[] args) 
+        {
+            switch (msg)
+            {
+                case "DEREGISTER":
+                    TcpClient Gameserverclient = GameServerConnctedClients![networkIdentity.GameServerID!.Value];
+                    CancellationTokenSource CS_GS_client = communicationCancelSources[Gameserverclient];
+                    serverDisconnectEvent?.Invoke(networkIdentity.GameServerID!.Value);
+                    CS_GS_client.Cancel();
+                    break;
+                
+                case "USERDISCONNECT":
+                    string userIP = args[0].Split(":")[0];
+                    userDisconnectEvent?.Invoke(userIP);
+                    break;
+            }
+        }
 
         private async Task UserMessageReader(NetworkIdentity networkIdentity, string msg, string[] args) { }
 
@@ -304,7 +320,6 @@ namespace BasicFleetServer.Operation
         {
             if (client.Connected)
             {
-
                 try
                 {
                     client.Client.Shutdown(SocketShutdown.Both);

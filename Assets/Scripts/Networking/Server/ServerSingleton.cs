@@ -1,6 +1,5 @@
-using System.Threading.Tasks;
+using System.Collections;
 using Unity.Netcode;
-using Unity.Services.Core;
 using UnityEngine;
 
 public class ServerSingelton : MonoBehaviour
@@ -15,6 +14,10 @@ public class ServerSingelton : MonoBehaviour
     private static ServerSingelton instance;
 
     public ServerGameManager GameManager { get; private set; }
+
+    private float serverTimeoutTime = 60f; // server should shutdown if there are no players connected for 60 seconds.
+
+    private Coroutine serverShutDownCorutine;
 
     public static ServerSingelton Instance
     {
@@ -38,6 +41,31 @@ public class ServerSingelton : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
+    private void Update()
+    {
+        if (GameManager.networkServer.IsServerEmpty)
+        {
+            if (serverShutDownCorutine == null)
+            {
+                serverShutDownCorutine = StartCoroutine(TimedShutDown());
+            }
+        }
+        else
+        {
+            if (serverShutDownCorutine != null)
+            {
+                StopCoroutine(serverShutDownCorutine);
+                serverShutDownCorutine = null;
+            }
+        }
+    }
+
+    private IEnumerator TimedShutDown()
+    {
+        yield return new WaitForSeconds(serverTimeoutTime);
+        GameManager.StopGameServer("IDLE");
+    }
+
     public void CreateServer()
     {
         ApplicationData appdata = new ApplicationData();
@@ -45,6 +73,7 @@ public class ServerSingelton : MonoBehaviour
             (
                 ApplicationData.IP(),
                 ApplicationData.Port(),
+                ApplicationData.ID(),
                 NetworkManager.Singleton
             );
     }

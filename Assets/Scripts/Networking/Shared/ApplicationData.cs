@@ -33,6 +33,11 @@ public class ApplicationData
         return PlayerPrefs.GetInt(PortCmd);
     }
 
+    public static int ID()
+    {
+        return PlayerPrefs.GetInt(IDCmd);
+    }
+
     //Ensure this gets instantiated Early on
     public ApplicationData()
     {

@@ -1,7 +1,6 @@
 ﻿using BasicFleetServer.Utils;
 using FleetServerUtils;
 using System.Data;
-using System.Linq;
 using static BasicFleetServer.Operation.FleetServerSocket;
 using static BasicFleetServer.Utils.AsyncEventSystem;
 
@@ -10,7 +9,7 @@ namespace BasicFleetServer.Operation
 
     internal class GS_Manager : IAsyncDisposable
     {
-        private const int MinPlayersToStartMatch = 2;
+        private const int MinPlayersToStartMatch = 1;
 
         private int ServerCounter = 0;
 
@@ -21,14 +20,21 @@ namespace BasicFleetServer.Operation
         // All connected MatchMaking Users Objects by IP.
         private Dictionary<string, MM_User> ALL_ConnectedUsers = new Dictionary<string, MM_User>();
 
+        // All connected MatchMaking GameServerInstance Objects by ID.
+        private Dictionary<int, GameServerInstance> ALL_ConnectedGameServers = new Dictionary<int, GameServerInstance>();
+
         // MatchMaking Players waiting for Match by MMR.
         private Dictionary<int, HashSet<MM_User>> WaitingRooms = new Dictionary<int, HashSet<MM_User>>();
 
         // GameServer Instance object Lists by MMR.
-        private Dictionary<int, List<GameServerInstance>> ActiveGameServerRooms = new Dictionary<int, List<GameServerInstance>>();
+        private Dictionary<int, HashSet<GameServerInstance>> ActiveGameServerRooms = new Dictionary<int, HashSet<GameServerInstance>>();
 
-        // GameServerInstances + MMR asignment awaiting spin up by GameServerID
-        private Dictionary<int, (int, GameServerInstance)> GameServerSpinUpPool = new Dictionary<int, (int, GameServerInstance)>();
+        // GameServerInstances asignment awaiting spin up by GameServerID
+        private Dictionary<int, GameServerInstance> GameServerSpinUpPool = new Dictionary<int, GameServerInstance>();
+
+        // A set of users that are currently being transfered to a game server, This is used to prevent data drops on clients after losing connection to the
+        // MatchMaking Socket while they in transit(intended).
+        private HashSet<MM_User> InTransit = new HashSet<MM_User>();
         
         // EVENTS.
         public static event AsyncEventHandler<(string[], string)>? SocketMessageEvent;
@@ -42,6 +48,7 @@ namespace BasicFleetServer.Operation
             newUserConnectEvent += RegisterNewUser;
             newGameServerConnectEvent += RegisterNewServer;
             userDisconnectEvent += UnRegisterUser;
+            serverDisconnectEvent += UnRegisterServer;
             this.fleetAppdata = fleetAppdata;
             dbManager = new DataBaseManager(fleetAppdata.databasePath);
             LocalIP = UtilsForIP.GetLanIP()!;
@@ -62,7 +69,7 @@ namespace BasicFleetServer.Operation
                 fleetAppdata.gameServerPath
             );
             serverInstance.StartSelf();
-            GameServerSpinUpPool[serverInstance.GameServerID] = (MMR, serverInstance);
+            GameServerSpinUpPool[serverInstance.GameServerID] = serverInstance;
         }
 
         public async Task RegisterNewUser(object _, (string clientIP, string clientName) e)
@@ -85,7 +92,7 @@ namespace BasicFleetServer.Operation
             }
 
             // BackFilling process
-            if (ActiveGameServerRooms.TryGetValue(connectedUser.MMR, out List<GameServerInstance>? GameServerOptions))
+            if (ActiveGameServerRooms.TryGetValue(connectedUser.MMR, out HashSet<GameServerInstance>? GameServerOptions))
             {
                 foreach (GameServerInstance serverInstance in GameServerOptions)
                 {
@@ -147,14 +154,16 @@ namespace BasicFleetServer.Operation
                 // Pop a server from the spin up pool ( its ready ).
                 GameServerSpinUpPool.Remove(
                     GameServerID,
-                    out (int MMR_Assignment, GameServerInstance GameServerInstance) NewGameServerData
+                    out GameServerInstance? GameServerInstance
                     );
 
-                HashSet<MM_User> WaitingRoom = WaitingRooms[NewGameServerData.MMR_Assignment];
-
+                HashSet<MM_User> WaitingRoom = WaitingRooms[GameServerInstance!.GAME_MMR];
+                
+                ALL_ConnectedGameServers[GameServerInstance.GameServerID] = GameServerInstance;
+                
                 ServerCounter++;
 
-                await MatchMake(NewGameServerData.GameServerInstance, WaitingRoom);
+                await MatchMake(GameServerInstance, WaitingRoom);
             }
             catch (KeyNotFoundException)
             {
@@ -167,7 +176,10 @@ namespace BasicFleetServer.Operation
             newGameServer.Players = MMR_room;
             int RoomMMR = newGameServer.GAME_MMR;
 
-            ActiveGameServerRooms.Add(RoomMMR, new List<GameServerInstance> { newGameServer });
+            if (!ActiveGameServerRooms.TryAdd(RoomMMR, new HashSet<GameServerInstance> { newGameServer })) 
+            {
+                ActiveGameServerRooms[RoomMMR].Add(newGameServer);
+            }
             
             await InvokeEventAsync(
                 SocketMessageEvent!,
@@ -181,6 +193,7 @@ namespace BasicFleetServer.Operation
                     )
                 )
             );
+            InTransit.UnionWith(MMR_room);
             MMR_room.Clear();
         }
 
@@ -189,14 +202,14 @@ namespace BasicFleetServer.Operation
         {
             if (ALL_ConnectedUsers.TryGetValue(IP, out MM_User? user))
             {
-                int UserMMR = user.MMR;
-                if (WaitingRooms[UserMMR].TryGetValue(user, out _))
+                if (InTransit.Remove(user))
                 {
-                    WaitingRooms[UserMMR].Remove(user);
+                    return; // User was in transit, so we just remove them from the in transit hashSet and exit without removing them from anywhere.
                 }
-                else 
+                int UserMMR = user.MMR;
+                if (!WaitingRooms[UserMMR].Remove(user))
                 {
-                    if (ActiveGameServerRooms.TryGetValue(UserMMR, out List<GameServerInstance>? ActiveGameServerList))
+                    if (ActiveGameServerRooms.TryGetValue(UserMMR, out HashSet<GameServerInstance>? ActiveGameServerList))
                     {
                         foreach (GameServerInstance server in ActiveGameServerList)
                         {
@@ -205,6 +218,28 @@ namespace BasicFleetServer.Operation
                     }
                 }
                 ALL_ConnectedUsers.Remove(IP);
+                Console.WriteLine($"[INFO] User with IP {IP} has disconnected and been removed from the system.");
+            }
+        }
+
+        private void UnRegisterServer(int ID)
+        {
+            if (ALL_ConnectedGameServers.TryGetValue(ID, out GameServerInstance? server))
+            {
+                int ServerMMR = server.GAME_MMR;
+
+                if (ActiveGameServerRooms.TryGetValue(ServerMMR, out HashSet<GameServerInstance>? ActiveGameServerList))
+                {
+                    if (ActiveGameServerList.Remove(server)) 
+                    {
+                        foreach (MM_User user in server.Players)
+                        {
+                            ALL_ConnectedUsers.Remove(user.User_IP);
+                        }
+                    }
+                }
+                ServerCounter--;
+                ALL_ConnectedGameServers.Remove(ID);
             }
         }
 
@@ -224,6 +259,7 @@ namespace BasicFleetServer.Operation
             newUserConnectEvent -= RegisterNewUser;
             newGameServerConnectEvent -= RegisterNewServer;
             userDisconnectEvent -= UnRegisterUser;
+            serverDisconnectEvent -= UnRegisterServer;
             ValueTask exitTask1 = dbManager.DisposeAsync();
             Task exitTask2 = StopAllServers();
             await Task.WhenAll([ exitTask1.AsTask(), exitTask2 ]);

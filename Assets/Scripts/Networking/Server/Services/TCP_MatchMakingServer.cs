@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -50,6 +49,20 @@ public class TCP_MatchMakingServer : IAsyncDisposable
         byte[] data = Encoding.UTF8.GetBytes(loginMessage);
         await networkDataStream.WriteAsync(data, 0, data.Length);
         Debug.Log("\n Written ID to matchmaking server.");
+    }
+    
+    public async Task LogOutAsync(int GameServerID, string Reason)
+    {
+        string logoutMessage = $"DEREGISTER|{GameServerID}|{Reason}";
+        byte[] data = Encoding.UTF8.GetBytes(logoutMessage);
+        await networkDataStream.WriteAsync(data, 0, data.Length);
+    }
+
+    public async Task msgUserDisconnect(string ip)
+    {
+        string disconnectMessage = $"USERDISCONNECT|{ip}";
+        byte[] data = Encoding.UTF8.GetBytes(disconnectMessage);
+        await networkDataStream.WriteAsync(data, 0, data.Length);
     }
 
     public async Task HeartBeat()

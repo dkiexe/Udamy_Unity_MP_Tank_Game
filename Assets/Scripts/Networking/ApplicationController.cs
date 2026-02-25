@@ -27,6 +27,10 @@ public class ApplicationController : MonoBehaviour
     {
         if (isDedicatedServer)
         {
+            // By Default The server will Try to use as much performance as possible using uneeded resources,
+            // we want to limit the server framerate to 60 fps, as there is no need for it to run faster than that.
+            Application.targetFrameRate = 60;
+
             ServerSingelton serverSingelton = Instantiate(serverPrefab);
             
             serverSingelton.CreateServer();
