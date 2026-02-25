@@ -2,7 +2,6 @@ using System;
 using Unity.Cinemachine;
 using Unity.Collections;
 using Unity.Netcode;
-using Unity.Netcode.Components;
 using UnityEngine;
 
 public class TankPlayer : NetworkBehaviour
@@ -11,6 +10,8 @@ public class TankPlayer : NetworkBehaviour
     [SerializeField] private CinemachineCamera TankCam;
     [SerializeField] private SpriteRenderer MinimapIconSprite;
     [SerializeField] private Texture2D gameCrosshair;
+    [SerializeField] private AudioSource TankEngineSoundSource;
+    [SerializeField] private AudioSource TankTurretSoundSource;
     [field: SerializeField] public Health playerHealth { get; private set; }
     [field: SerializeField] public CoinWallet Wallet { get; private set; }
 
@@ -55,6 +56,10 @@ public class TankPlayer : NetworkBehaviour
         {
             TankCam.Priority = OwnerCamPriority;
             MinimapIconSprite.color = OwnerMinimapColor;
+            
+            // Makes the owner's sound sources 2D so it doesn't change based on the player's position/rotation.
+            TankEngineSoundSource.spatialBlend = 0f;
+            TankTurretSoundSource.spatialBlend = 0f;
 
             Cursor.SetCursor(
                 gameCrosshair,
