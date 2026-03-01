@@ -105,11 +105,13 @@ public class ClientGameManager : IDisposable
     public async Task StartMatchmakerClientAsync(
         TMP_Text queueStatusText,
         TMP_Text queueTimerText,
-        TMP_Text findMatchButtonText
+        TMP_Text findMatchButtonText,
+        bool TeamQueueEnabled
         )
     {
         bool MMResult = await mmUser.StartMatchmakingUserAsync(
             AuthenticationService.Instance.PlayerId,
+            TeamQueueEnabled,
             queueStatusText,
             queueTimerText,
             findMatchButtonText

@@ -16,7 +16,7 @@ namespace BasicFleetServer.Operation
     class FleetServerSocket : IAsyncDisposable
     {
         // Events
-        public static event AsyncEventHandler<(string, string)>? newUserConnectEvent; // ( authID, UserName )
+        public static event AsyncEventHandler<string[]>? newUserConnectEvent; // ( authID, UserName )
         public static event AsyncEventHandler<int>? newGameServerConnectEvent; // ( GameServerID )
         public static event Action<string>? userDisconnectEvent; // (authID)
         public static event Action<int>? serverDisconnectEvent; // ( GameServerID )
@@ -49,15 +49,18 @@ namespace BasicFleetServer.Operation
             this.Port = Port;
             this.socketType = socketType;
 
+            // Subscribing to events and Initializing objects based on socket type.
             if (socketType == SocketType.ForUsers)
             {
                 UserConnectedClients = new Dictionary<string, TcpClient>();
-                GS_Manager.SocketMessageEvent += WriteMessageToUsers;
-                GS_Manager.bannedClientConnectedEvent += HandleBannedClient;
+                MatchMakingOperator.SocketMessageEvent += WriteMessageToUsers;
+                Data_Manager.bannedClientConnectedEvent += HandleBannedClient;
+                Data_Manager.DropUserClientEvent += DisconnectUserClient;
             }
             else
             {
                 GameServerConnctedClients = new Dictionary<int, TcpClient>();
+                Data_Manager.DropServerClientEvent += DisconnectServerClient;
             }
         }
 
@@ -100,10 +103,7 @@ namespace BasicFleetServer.Operation
             switch (socketType)
             {
                 case SocketType.ForUsers:
-                    
                     string authID = args[0];
-                    string UserName = args[1];
-
                     if (!(UserConnectedClients!.ContainsKey(authID)))
                     {
                         UserConnectedClients[authID] = client;
@@ -119,7 +119,7 @@ namespace BasicFleetServer.Operation
                         (
                             newUserConnectEvent!,
                             this,
-                            (authID, UserName)
+                            args
                         );
 
                         Task readerTask = ClientMessageReader(networkIdentity, client);
@@ -130,8 +130,6 @@ namespace BasicFleetServer.Operation
                     
                     if (int.TryParse(args[0], out int GameServerID))
                     {
-                        Console.WriteLine($"New Game Server Connected : {GameServerID}"); // {_(!)_} For testing purposes
-
                         if (!(GameServerConnctedClients!.ContainsKey(GameServerID)))
                         {
                             GameServerConnctedClients![GameServerID] = client;
@@ -312,6 +310,16 @@ namespace BasicFleetServer.Operation
             }
         }
 
+        private async Task DisconnectUserClient(object _, string authID) 
+        {
+            await DisconnectClient(UserConnectedClients![authID]);
+        }
+
+        private async Task DisconnectServerClient(object _, int ServerID)
+        {
+            await DisconnectClient(GameServerConnctedClients![ServerID]);
+        }
+
         private async Task DisconnectClient(TcpClient client) // Destroy clients here.
         {
             if (client.Connected)
@@ -338,8 +346,16 @@ namespace BasicFleetServer.Operation
         public async ValueTask DisposeAsync()
         {
             // Unsubscribe from events
-            GS_Manager.SocketMessageEvent -= WriteMessageToUsers;
-            GS_Manager.bannedClientConnectedEvent -= HandleBannedClient;
+            if (socketType == SocketType.ForUsers)
+            {
+                MatchMakingOperator.SocketMessageEvent += WriteMessageToUsers;
+                Data_Manager.bannedClientConnectedEvent += HandleBannedClient;
+                Data_Manager.DropUserClientEvent += DisconnectUserClient;
+            }
+            else
+            {
+                Data_Manager.DropServerClientEvent += DisconnectServerClient;
+            }
 
             // Cancel all communication tasks
             GlobalCancelSource.Cancel();

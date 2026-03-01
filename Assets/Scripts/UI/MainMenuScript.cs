@@ -14,6 +14,8 @@ public class MainMenuScript : MonoBehaviour
     [SerializeField] private Button LobbiesButton;
     [SerializeField] private Button LanButton;
 
+    public bool TeamQueueEnabled { get; set; } = false;
+
     private void Start()
     {
         SetButtonsActive(true);
@@ -42,7 +44,8 @@ public class MainMenuScript : MonoBehaviour
         await ClientSingelton.Instance.GameManager.StartMatchmakerClientAsync(
             queueStatusText, 
             queueTimerText,
-            findMatchButtonText
+            findMatchButtonText,
+            TeamQueueEnabled
             );
         SetButtonsActive(true);
     }
