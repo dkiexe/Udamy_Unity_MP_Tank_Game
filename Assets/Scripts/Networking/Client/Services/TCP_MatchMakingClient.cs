@@ -49,7 +49,7 @@ public class TCP_MatchMakingClient : IAsyncDisposable
         }
     }
 
-    public async Task<NetworkOperationResult> LogInAsync(string userName, CancellationToken cancelToken)
+    public async Task<NetworkOperationResult> LogInAsync(string authID, string userName, CancellationToken cancelToken)
     {
         client = new TcpClient();
         bool result = false;
@@ -61,7 +61,7 @@ public class TCP_MatchMakingClient : IAsyncDisposable
 
             networkDataStream = client.GetStream();
 
-            string loginMessage = $"REGISTER|{userName}";
+            string loginMessage = $"REGISTER|{authID}|{userName}";
             byte[] data = Encoding.UTF8.GetBytes(loginMessage);
             await networkDataStream.WriteAsync(data, 0, data.Length, cancelToken);
 

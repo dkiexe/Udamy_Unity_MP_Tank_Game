@@ -17,7 +17,7 @@ namespace BasicFleetServer.Operation
 
         public DataBaseManager dbManager;
 
-        // All connected MatchMaking Users Objects by IP.
+        // All connected MatchMaking Users Objects by authID.
         private Dictionary<string, MM_User> ALL_ConnectedUsers = new Dictionary<string, MM_User>();
 
         // All connected MatchMaking GameServerInstance Objects by ID.
@@ -37,9 +37,9 @@ namespace BasicFleetServer.Operation
         private HashSet<MM_User> InTransit = new HashSet<MM_User>();
         
         // EVENTS.
-        public static event AsyncEventHandler<(string[], string)>? SocketMessageEvent;
+        public static event AsyncEventHandler<(string[], string)>? SocketMessageEvent; // (string[] authIDs, string message)
 
-        public static event AsyncEventHandler<(string, string)>? bannedClientConnectedEvent;
+        public static event AsyncEventHandler<(string, string)>? bannedClientConnectedEvent; // (string authID, string message)
 
         private string LocalIP;
 
@@ -51,7 +51,7 @@ namespace BasicFleetServer.Operation
             serverDisconnectEvent += UnRegisterServer;
             this.fleetAppdata = fleetAppdata;
             dbManager = new DataBaseManager(fleetAppdata.databasePath);
-            LocalIP = UtilsForIP.GetLanIP()!;
+            LocalIP = UtilsForIP.GetActiveLanIP()!;
 
             if (LocalIP == null)
             {
@@ -72,10 +72,10 @@ namespace BasicFleetServer.Operation
             GameServerSpinUpPool[serverInstance.GameServerID] = serverInstance;
         }
 
-        public async Task RegisterNewUser(object _, (string clientIP, string clientName) e)
+        public async Task RegisterNewUser(object _, (string authID, string userName) eventData)
         {
-            MM_User connectedUser = await dbManager.ReadPlayerInfoByIP(e.clientIP, e.clientName);
-            ALL_ConnectedUsers[e.clientIP] = connectedUser;
+            MM_User connectedUser = await dbManager.ReadPlayerInfoByAuthID(eventData.authID, eventData.userName);
+            ALL_ConnectedUsers[eventData.authID] = connectedUser;
 
             // Handle Banned Users.
             if (connectedUser.IsBanned)
@@ -85,7 +85,7 @@ namespace BasicFleetServer.Operation
                     bannedClientConnectedEvent!,
                     this,
                     (
-                        connectedUser.User_IP,
+                        connectedUser.authID,
                         MSG_Translator.ConstructNetworkMessage("BANNED", ["INF"]) // {_(!)_} Currently banned players are banned permanently.
                     )
                 );
@@ -136,7 +136,7 @@ namespace BasicFleetServer.Operation
                 SocketMessageEvent!,
                 this,
                 (
-                    [user.User_IP],
+                    [user.authID],
                     MSG_Translator.ConstructNetworkMessage
                     (
                         "CONNECT",
@@ -157,6 +157,7 @@ namespace BasicFleetServer.Operation
                     out GameServerInstance? GameServerInstance
                     );
 
+                // {_(!)_} ISSUE BECAME APPEARENT SERVER MAY TAKE MORE PLAYERS THAN ITS LIMIT HERE, BY TAKING THE WHOLE WAITING ROOM!.
                 HashSet<MM_User> WaitingRoom = WaitingRooms[GameServerInstance!.GAME_MMR];
                 
                 ALL_ConnectedGameServers[GameServerInstance.GameServerID] = GameServerInstance;
@@ -185,7 +186,7 @@ namespace BasicFleetServer.Operation
                 SocketMessageEvent!,
                 this,
                 (
-                    MMR_room.Select(x => x.User_IP).ToArray(),
+                    MMR_room.Select(x => x.authID).ToArray(),
                     MSG_Translator.ConstructNetworkMessage
                     (
                         "CONNECT",
@@ -198,9 +199,9 @@ namespace BasicFleetServer.Operation
         }
 
 
-        private void UnRegisterUser(string IP)
+        private void UnRegisterUser(string authID)
         {
-            if (ALL_ConnectedUsers.TryGetValue(IP, out MM_User? user))
+            if (ALL_ConnectedUsers.TryGetValue(authID, out MM_User? user))
             {
                 if (InTransit.Remove(user))
                 {
@@ -217,8 +218,7 @@ namespace BasicFleetServer.Operation
                         }
                     }
                 }
-                ALL_ConnectedUsers.Remove(IP);
-                Console.WriteLine($"[INFO] User with IP {IP} has disconnected and been removed from the system.");
+                ALL_ConnectedUsers.Remove(authID);
             }
         }
 
@@ -234,7 +234,7 @@ namespace BasicFleetServer.Operation
                     {
                         foreach (MM_User user in server.Players)
                         {
-                            ALL_ConnectedUsers.Remove(user.User_IP);
+                            ALL_ConnectedUsers.Remove(user.authID);
                         }
                     }
                 }
@@ -245,9 +245,9 @@ namespace BasicFleetServer.Operation
 
         public async Task StopAllServers()
         {
-            foreach (var MMRbracket in ActiveGameServerRooms)
+            foreach (HashSet<GameServerInstance> MMRbracket in ActiveGameServerRooms.Values)
             {
-                foreach (var serverInstance in MMRbracket.Value)
+                foreach (GameServerInstance serverInstance in MMRbracket)
                 {
                     await serverInstance.StopSelf();
                 }

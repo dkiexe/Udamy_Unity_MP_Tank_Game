@@ -16,12 +16,12 @@ namespace BasicFleetServer.Operation
     class FleetServerSocket : IAsyncDisposable
     {
         // Events
-        public static event AsyncEventHandler<(string, string)>? newUserConnectEvent;
-        public static event AsyncEventHandler<int>? newGameServerConnectEvent;
-        public static event Action<string>? userDisconnectEvent;
-        public static event Action<int>? serverDisconnectEvent;
+        public static event AsyncEventHandler<(string, string)>? newUserConnectEvent; // ( authID, UserName )
+        public static event AsyncEventHandler<int>? newGameServerConnectEvent; // ( GameServerID )
+        public static event Action<string>? userDisconnectEvent; // (authID)
+        public static event Action<int>? serverDisconnectEvent; // ( GameServerID )
 
-        // IP to TcpClient object mapping for user connections.
+        // authID to TcpClient object mapping for user connections.
         public Dictionary<string, TcpClient>? UserConnectedClients;
 
         // GameServerID to TcpClient object mapping for GameServer connections.
@@ -100,29 +100,26 @@ namespace BasicFleetServer.Operation
             switch (socketType)
             {
                 case SocketType.ForUsers:
-                    IPEndPoint remoteEndPoint = (IPEndPoint)client.Client.RemoteEndPoint!;
-                    string ipAddress = remoteEndPoint!.Address.ToString();
+                    
+                    string authID = args[0];
+                    string UserName = args[1];
 
-                    string UserName = args[0];
-
-                    Console.WriteLine($"New User Connected : {ipAddress} UserName : {UserName}"); // {_(!)_} For testing purposes
-
-                    if (!(UserConnectedClients!.ContainsKey(ipAddress)))
+                    if (!(UserConnectedClients!.ContainsKey(authID)))
                     {
-                        UserConnectedClients[ipAddress] = client;
+                        UserConnectedClients[authID] = client;
 
                         communicationCancelSources[client] = new CancellationTokenSource();
 
                         networkIdentity = new NetworkIdentity
                         {
-                            IPAddress = ipAddress
+                            authID = authID
                         };
 
                         Task UserLoginEvent = InvokeEventAsync
                         (
                             newUserConnectEvent!,
                             this,
-                            (networkIdentity.IPAddress, UserName)
+                            (authID, UserName)
                         );
 
                         Task readerTask = ClientMessageReader(networkIdentity, client);
@@ -159,7 +156,7 @@ namespace BasicFleetServer.Operation
                     else
                     {
                         client.Dispose();
-                        Console.WriteLine("Invalid Game Server ID during registration"); // {_(!)_} For testing purposes
+                        Console.WriteLine("Invalid Game Server ID during registration.");
                     }
                     break;
             }
@@ -168,10 +165,10 @@ namespace BasicFleetServer.Operation
 
         public async Task ClientMessageReader(NetworkIdentity networkIdentity, TcpClient client)
         {
-            CancellationToken GlobalCancelToken = GlobalCancelSource.Token; // Global cancellation token for the entire server
-            CancellationToken CommCancelToken = communicationCancelSources[client].Token; // Cancellation token specific a client
+            CancellationToken GlobalCancelToken = GlobalCancelSource.Token; // Global cancellation token for the entire server.
+            CancellationToken CommCancelToken = communicationCancelSources[client].Token; // Communication cancellation token specific per client.
 
-            // Combine both cancellation token sources
+            // Combine both cancellation token sources for one.
             using CancellationTokenSource linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                 [GlobalCancelToken, CommCancelToken]
                 );
@@ -208,8 +205,8 @@ namespace BasicFleetServer.Operation
             switch (socketType)
             {
                 case SocketType.ForUsers:
-                    UserConnectedClients!.Remove(networkIdentity.IPAddress!);
-                    userDisconnectEvent?.Invoke(networkIdentity.IPAddress!);
+                    UserConnectedClients!.Remove(networkIdentity.authID!);
+                    userDisconnectEvent?.Invoke(networkIdentity.authID!);
                     break;
 
                 case SocketType.ForGameServers:
@@ -225,42 +222,41 @@ namespace BasicFleetServer.Operation
             {
                 case "DEREGISTER":
                     TcpClient Gameserverclient = GameServerConnctedClients![networkIdentity.GameServerID!.Value];
-                    CancellationTokenSource CS_GS_client = communicationCancelSources[Gameserverclient];
+                    CancellationTokenSource CS_GS_client = communicationCancelSources[Gameserverclient]; //communication cancel source gameserver client 
                     serverDisconnectEvent?.Invoke(networkIdentity.GameServerID!.Value);
                     CS_GS_client.Cancel();
                     break;
                 
                 case "USERDISCONNECT":
-                    string userIP = args[0].Split(":")[0];
-                    userDisconnectEvent?.Invoke(userIP);
+                    userDisconnectEvent?.Invoke(args[0]);
                     break;
             }
         }
 
         private async Task UserMessageReader(NetworkIdentity networkIdentity, string msg, string[] args) { }
 
-        private async Task HandleBannedClient(object sender, (string IP, string msg) e)
+        private async Task HandleBannedClient(object sender, (string authID, string msg) eventData)
         {
-            TcpClient bannedClientSocket = UserConnectedClients![e.IP];
+            TcpClient bannedClientSocket = UserConnectedClients![eventData.authID];
             CancellationTokenSource cancelClientSource = communicationCancelSources[bannedClientSocket];
             
             cancelClientSource.Cancel();
             cancelClientSource.Dispose();
 
-            await WriteMessageToUsers(sender, (new string[] { e.IP }, e.msg));
+            await WriteMessageToUsers(sender, (new string[] { eventData.authID }, eventData.msg));
 
-            UserConnectedClients.Remove(e.IP);
+            UserConnectedClients.Remove(eventData.authID);
             communicationCancelSources.Remove(bannedClientSocket);
         }
 
-        private async Task WriteMessageToUsers(object _, (string[] IP_Destinations, string msg) e)
+        private async Task WriteMessageToUsers(object _, (string[] authIDs, string msg) eventData)
         {
             List<Task> WriteTasks = new();
-            byte[] messageBytes = Encoding.UTF8.GetBytes(e.msg);
+            byte[] messageBytes = Encoding.UTF8.GetBytes(eventData.msg);
 
-            foreach (string ip in e.IP_Destinations)
+            foreach (string authID in eventData.authIDs)
             {
-                if (UserConnectedClients!.TryGetValue(ip, out TcpClient? client))
+                if (UserConnectedClients!.TryGetValue(authID, out TcpClient? client))
                 {
                     if (client.Connected)
                     {
@@ -349,8 +345,9 @@ namespace BasicFleetServer.Operation
             GlobalCancelSource.Cancel();
 
             // Cleaning up all cancellation tokens 
-            foreach (var cancelSource in communicationCancelSources.Values)
+            foreach (CancellationTokenSource cancelSource in communicationCancelSources.Values)
             {
+                if (cancelSource == null) continue;
                 cancelSource.Dispose();
             }
         }

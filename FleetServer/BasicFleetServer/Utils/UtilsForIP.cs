@@ -1,31 +1,43 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text;
 
 namespace BasicFleetServer.Utils
 {
     public static class UtilsForIP
     {
-        public static string? GetLanIP() 
+        public static string? GetActiveLanIP()
         {
             foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
             {
-                // Only look at operational interfaces that aren't loopback/virtual
-                if (ni.OperationalStatus == OperationalStatus.Up &&
-                    ni.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                // Must be up and running
+                if (ni.OperationalStatus != OperationalStatus.Up)
+                    continue;
+
+                // Ignore loopback ( PC talking to itself ) & tunnel ( Virtual envs )
+                if (ni.NetworkInterfaceType == NetworkInterfaceType.Loopback ||
+                    ni.NetworkInterfaceType == NetworkInterfaceType.Tunnel)
+                    continue;
+
+                var ipProps = ni.GetIPProperties();
+
+                // IMPORTANT: Must have a default gateway ( connected to a network )
+                if (!ipProps.GatewayAddresses.Any(g =>
+                    g.Address.AddressFamily == AddressFamily.InterNetwork))
+                    continue;
+
+                foreach (var ip in ipProps.UnicastAddresses)
                 {
-                    foreach (UnicastIPAddressInformation ip in ni.GetIPProperties().UnicastAddresses)
+                    if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
                     {
-                        if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
-                        {
-                            return ip.Address.ToString();
-                        }
+                        return ip.Address.ToString();
                     }
                 }
             }
-            return default;
+
+            return null;
         }
     }
 }
