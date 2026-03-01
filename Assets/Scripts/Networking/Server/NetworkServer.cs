@@ -14,16 +14,13 @@ public class NetworkServer : IDisposable
     /// </summary>
     private NetworkManager networkManager;
 
-    public event Action<string, string> OnClientLeft;
+    public event Action<string> OnClientLeft; // (authID)
 
     // Dictionary UGS server id to a UGS authintication id.
     private Dictionary<ulong, string> clientNetworkID_TO_AuthID = new Dictionary<ulong, string>();
 
     // Dictionary UGS authintication id to UserData object.
     private Dictionary<string, UserData> authID_TO_UserData = new Dictionary<string, UserData>();
-
-    // Dictionary Client id to IP. ( only useful when not using UGS services ).
-    private Dictionary<ulong, string> clientNetworkID_TO_IP = new Dictionary<ulong, string>();
 
     public bool IsServerEmpty => clientNetworkID_TO_AuthID.Count == 0;
 
@@ -59,11 +56,6 @@ public class NetworkServer : IDisposable
         // taking the json string and converting it to UserData object
         UserData userData = JsonUtility.FromJson<UserData>(stringPaylaod);
 
-        // Getting the client IP from the connection request and saving it in a dictionary for later use.
-        UnityTransport transport = NetworkManager.Singleton.NetworkConfig.NetworkTransport as UnityTransport;
-        NetworkEndpoint clientNetworkEndpoint = transport.GetEndpoint(request.ClientNetworkId);
-        clientNetworkID_TO_IP[request.ClientNetworkId] = new string(clientNetworkEndpoint.Address);
-
         clientNetworkID_TO_AuthID[request.ClientNetworkId] = userData.userAuthId;
         authID_TO_UserData[userData.userAuthId] = userData;
 
@@ -89,8 +81,7 @@ public class NetworkServer : IDisposable
         if (!clientNetworkID_TO_AuthID.TryGetValue(clientNetworkID, out string authID)) return;
         clientNetworkID_TO_AuthID.Remove(clientNetworkID);
         authID_TO_UserData.Remove(authID);
-        clientNetworkID_TO_IP.Remove(clientNetworkID, out string IP);
-        OnClientLeft?.Invoke(authID, IP);
+        OnClientLeft?.Invoke(authID);
     }
 
     public UserData GetUserDataFromClientID(ulong ClientId)

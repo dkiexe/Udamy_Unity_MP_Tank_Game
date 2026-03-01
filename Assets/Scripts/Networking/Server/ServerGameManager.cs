@@ -69,9 +69,9 @@ public class ServerGameManager : IDisposable
         Application.Quit();
     }
 
-    private async void HandleClientLeave(string _, string ClientID)
+    private async void HandleClientLeave(string authID)
     {
-        await tcp_MatchMakingServer.msgUserDisconnect(ClientID);
+        await tcp_MatchMakingServer.msgUserDisconnect(authID);
     }
 
     public void Dispose()

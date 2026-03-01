@@ -2,7 +2,7 @@
 {
     public class NetworkIdentity
     {
-        public string? IPAddress;
+        public string? authID;
         public int? GameServerID;
     }
 }

@@ -58,9 +58,9 @@ public class TCP_MatchMakingServer : IAsyncDisposable
         await networkDataStream.WriteAsync(data, 0, data.Length);
     }
 
-    public async Task msgUserDisconnect(string ip)
+    public async Task msgUserDisconnect(string authID)
     {
-        string disconnectMessage = $"USERDISCONNECT|{ip}";
+        string disconnectMessage = $"USERDISCONNECT|{authID}";
         byte[] data = Encoding.UTF8.GetBytes(disconnectMessage);
         await networkDataStream.WriteAsync(data, 0, data.Length);
     }
