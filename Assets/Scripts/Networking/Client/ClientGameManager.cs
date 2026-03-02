@@ -53,7 +53,7 @@ public class ClientGameManager : IDisposable
         SceneManager.LoadScene(MenuSceneName);
     }
 
-    public void StartClient()
+    public void StartClient(GameQueue gameQueuePref = GameQueue.Solo)
     {
         // making a new user data object to then convert to json and send to the server.
         UserData userData = new UserData
@@ -119,7 +119,7 @@ public class ClientGameManager : IDisposable
 
         if (MMResult)
         {
-            StartClient();
+            StartClient(TeamQueueEnabled ? GameQueue.Team : GameQueue.Solo);
         }
     }
 

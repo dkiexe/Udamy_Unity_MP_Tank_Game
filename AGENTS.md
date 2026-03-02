@@ -2,7 +2,7 @@
 - Project name: MultiPlayerTanks
 - Unity version: Unity 6000.3.1f1
 - Active game object:
-  - Name: Canvas
+  - Name: MainMenu
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->
