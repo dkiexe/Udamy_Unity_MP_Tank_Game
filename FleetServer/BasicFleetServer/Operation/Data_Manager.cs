@@ -1,16 +1,12 @@
 ﻿using BasicFleetServer.Utils;
 using FleetServerUtils;
+using System.Data;
+using static BasicFleetServer.Operation.MatchMakingOperator;
 using static BasicFleetServer.Operation.FleetServerSocket;
 using static BasicFleetServer.Utils.AsyncEventSystem;
 
 namespace BasicFleetServer.Operation
 {
-    public enum MM_QueueType
-    {
-        SOLO,
-        TEAMS
-    }
-
     internal class Data_Manager : IAsyncDisposable
     {
         private const int MinPlayersToStartMatch = 2;
@@ -32,6 +28,11 @@ namespace BasicFleetServer.Operation
 
         public static event AsyncEventHandler<int>? DropServerClientEvent;
 
+        // Internal Data.
+        private int ServerCounter => Math.Max(matchMakingData.ALL_ConnectedGameServers.Count, matchMakingData.GameServerSpinUpPool.Count);
+
+        private string LocalIP;
+
         public Data_Manager(FleetApplicationData fleetAppdata)
         {
             // Event Subscriptions.
@@ -39,15 +40,22 @@ namespace BasicFleetServer.Operation
             newGameServerConnectEvent += RegisterNewServer;
             userDisconnectEvent += UnRegisterUser;
             serverDisconnectEvent += UnRegisterServer;
+            CreateServerEvent += GenerateGameServer;
 
             // Data Initialization.
             this.fleetAppdata = fleetAppdata;
+            LocalIP = UtilsForIP.GetActiveLanIP()!;
+
+            if (LocalIP == null)
+            {
+                throw new NoNullAllowedException($"Failed To fetch LocalIP address!");
+            }
+
             dbManager = new DataBaseManager(fleetAppdata.databasePath);
             matchMakingData = new MatchMakingData();
             matchMakingOperator = new MatchMakingOperator
                 (
                     matchMakingData,
-                    fleetAppdata,
                     MinPlayersToStartMatch
                 );
         }
@@ -106,22 +114,11 @@ namespace BasicFleetServer.Operation
 
         private async Task RegisterNewServer(object _, int GameServerID)
         {
-            try
-            {
-                // Pop a server from the spin up pool ( its ready ).
-                matchMakingData.GameServerSpinUpPool.Remove(
-                    GameServerID,
-                    out GameServerInstance? GameServerInstance
-                    );
-
-                // {_(!)_} ISSUE BECAME APPEARENT SERVER MAY TAKE MORE PLAYERS THAN ITS LIMIT HERE, BY TAKING THE WHOLE WAITING ROOM!.
-                HashSet<MM_User> WaitingRoom = matchMakingData.WaitingRoomsSolo[GameServerInstance!.GAME_MMR];
-
-                matchMakingData.ALL_ConnectedGameServers[GameServerInstance.GameServerID] = GameServerInstance;
-
-                await matchMakingOperator.MatchMakingServerAssignmentAsync(GameServerInstance, WaitingRoom);
-            }
-            catch (KeyNotFoundException)
+            // Pop a server from the spin up pool ( its ready ).
+            if (!matchMakingData.GameServerSpinUpPool.Remove(
+                GameServerID,
+                out GameServerInstance? gameServerInstance
+                ))
             {
                 Console.WriteLine("\n[!@!] Unrecognised server tried to add itself to fleet, dropped.");
                 await InvokeEventAsync
@@ -130,7 +127,11 @@ namespace BasicFleetServer.Operation
                     this,
                     GameServerID
                 );
+                return;
             }
+
+            matchMakingData.ALL_ConnectedGameServers[GameServerID] = gameServerInstance;
+            await matchMakingOperator.MatchMakingServerAssignmentAsync(gameServerInstance);
         }
 
         private void UnRegisterUser(string authID)
@@ -141,17 +142,7 @@ namespace BasicFleetServer.Operation
                 {
                     return; // User was in transit, so we just remove them from the in transit hashSet and exit without removing them from anywhere.
                 }
-                int UserMMR = user.MMR;
-                if (!matchMakingData.WaitingRoomsSolo[UserMMR].Remove(user))
-                {
-                    if (matchMakingData.ActiveGameServerRoomsSolos.TryGetValue(UserMMR, out HashSet<GameServerInstance>? ActiveGameServerList))
-                    {
-                        foreach (GameServerInstance server in ActiveGameServerList)
-                        {
-                            if (server.Players.Remove(user)) break;
-                        }
-                    }
-                }
+                matchMakingOperator.RemoveUserFromMatchMaking(user);
                 matchMakingData.ALL_ConnectedUsers.Remove(authID);
             }
         }
@@ -176,14 +167,40 @@ namespace BasicFleetServer.Operation
             }
         }
 
+        public void GenerateGameServer(int MMR, MM_QueueType queueType, HashSet<MM_User> waitingRoom)
+        {
+            if (ServerCounter < fleetAppdata.maxServerCount)
+            {
+                int serverID = ServerCounter;
+
+                if (matchMakingData.GameServerSpinUpPool.ContainsKey(serverID) || matchMakingData.ALL_ConnectedGameServers.ContainsKey(serverID))
+                {
+                    Console.WriteLine($"[!@!] Error: Server with ID {serverID} already exists in the system, cannot generate new server instance for MMR Group : {MMR} with ID {serverID}");
+                    return;
+                }
+
+                GameServerInstance serverInstance = new GameServerInstance(
+                    serverID,
+                    MMR,
+                    LocalIP,
+                    7777 + ServerCounter,
+                    fleetAppdata.gameServerPath,
+                    queueType
+                );
+                serverInstance.StartSelf();
+                matchMakingData.GameServerSpinUpPool[serverInstance.GameServerID] = serverInstance;
+            }
+            else
+            {
+                Console.WriteLine($"[!@!] Error: Max server count reached, cannot generate new server instance for MMR Group : {MMR}");
+            }
+        }
+
         public async Task StopAllServers()
         {
-            foreach (HashSet<GameServerInstance> MMRbracket in matchMakingData.ActiveGameServerRoomsSolos.Values)
+            foreach (GameServerInstance serverInstance in matchMakingData.ALL_ConnectedGameServers.Values)
             {
-                foreach (GameServerInstance serverInstance in MMRbracket)
-                {
-                    await serverInstance.StopSelf();
-                }
+                await serverInstance.StopSelf();
             }
         }
 
@@ -193,6 +210,7 @@ namespace BasicFleetServer.Operation
             newGameServerConnectEvent -= RegisterNewServer;
             userDisconnectEvent -= UnRegisterUser;
             serverDisconnectEvent -= UnRegisterServer;
+            CreateServerEvent -= GenerateGameServer;
             ValueTask exitTask1 = dbManager.DisposeAsync();
             Task exitTask2 = StopAllServers();
             await Task.WhenAll([ exitTask1.AsTask(), exitTask2 ]);
