@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Assets.Scripts.Networking.Shared.Services;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
@@ -21,10 +22,13 @@ public class TCP_MatchMakingClient : IAsyncDisposable
 
     private NetworkStream networkDataStream;
 
+    private TCP_Socket TCP_socket;
+
     private const int HeartBeatDelay = 5000; // Send heartbeat every 5 seconds
 
     public TCP_MatchMakingClient()
     {
+        TCP_socket = new TCP_Socket();
         ReadJson();
     }
 
@@ -63,12 +67,12 @@ public class TCP_MatchMakingClient : IAsyncDisposable
         try
         {
             await client.ConnectAsync(TCP_ServerIP, TCP_ServerPort);
-
+            
+            string loginMessage = $"REGISTER|{authID}|{userName}|{QueueType}";
+            
             networkDataStream = client.GetStream();
 
-            string loginMessage = $"REGISTER|{authID}|{userName}|{QueueType}";
-            byte[] data = Encoding.UTF8.GetBytes(loginMessage);
-            await networkDataStream.WriteAsync(data, 0, data.Length, cancelToken);
+            await TCP_socket.SendTCPMessageAsync(networkDataStream, loginMessage, cancelToken);
 
             result = true;
         }
@@ -115,14 +119,13 @@ public class TCP_MatchMakingClient : IAsyncDisposable
         try
         {
             Task HeartBeatTask = HeartBeat(networkDataStream, CombinedCancelSoruce.Token);
-            byte[] buffer = new byte[1024];
-            int bytesRead = await networkDataStream.ReadAsync(buffer, 0, buffer.Length);
 
-            string ServerMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            string RecivedMessage = await TCP_socket.ReceiveTCPMessageAsync(networkDataStream, CombinedCancelSoruce.Token);
+
             CombinedCancelSoruce.Cancel(); // stop heartbeat task once we received a server message.
             await HeartBeatTask;
 
-            msg = new List<string>(ServerMessage.Split("|"));
+            msg = new List<string>(RecivedMessage.Split("|"));
 
             result = true;
         }
@@ -169,7 +172,7 @@ public class TCP_MatchMakingClient : IAsyncDisposable
         {
             while (!cancelToken.IsCancellationRequested)
             {
-                await networkDtatStream.WriteAsync(heartbeatMessage, 0, heartbeatMessage.Length);
+                await TCP_socket.SendTCPMessageAsync(networkDtatStream, "HEARTBEAT", cancelToken);
                 await Task.Delay(HeartBeatDelay, cancelToken);
             }
         }

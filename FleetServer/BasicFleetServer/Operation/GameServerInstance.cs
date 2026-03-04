@@ -10,7 +10,7 @@ namespace BasicFleetServer.Operation
         public string GameIP { get; private set; }
         public int GamePort { get; private set; }
         public int GAME_MMR { get; private set; }
-        public MM_QueueType GameType { get; private set; }
+        public MM_GameType GameType { get; private set; }
 
         public HashSet<MM_User> Players = new HashSet<MM_User>();
 
@@ -20,7 +20,7 @@ namespace BasicFleetServer.Operation
 
         public bool isFull => Players.Count > MaxPlayers;
 
-        public GameServerInstance(int ID, int MMR, string IP, int Port, string pathToExE, MM_QueueType queueType)
+        public GameServerInstance(int ID, int MMR, string IP, int Port, string pathToExE, MM_GameType queueType)
         {
             GAME_MMR = MMR;
             GameServerID = ID;

@@ -31,7 +31,7 @@ namespace FleetServerUtils
             sqliteCommand.ExecuteNonQuery();
         }
 
-        public async Task<MM_User> ReadPlayerInfoByAuthID(string authID, string playerName, MM_QueueType QueTypePref)
+        public async Task<MM_User> ReadPlayerInfoByAuthID(string authID, string playerName, MM_GameType GameTypePref)
         {
             SqliteCommand sqliteCommand = dbCon!.CreateCommand();
             sqliteCommand.CommandText =
@@ -50,16 +50,16 @@ namespace FleetServerUtils
                     Username = reader.GetString(1),
                     MMR = reader.GetInt32(2),
                     IsBanned = reader.GetInt32(3) != 0,
-                    gamePreference = QueTypePref
+                    gamePreference = GameTypePref
                 };
             }
             else
             {
-                return await CreatePlayerInfoByAuthID(authID, playerName, QueTypePref);
+                return await CreatePlayerInfoByAuthID(authID, playerName, GameTypePref);
             }
         }
 
-        public async Task<MM_User> CreatePlayerInfoByAuthID(string authID, string userName, MM_QueueType QueTypePref)
+        public async Task<MM_User> CreatePlayerInfoByAuthID(string authID, string userName, MM_GameType GameTypePref)
         {
             SqliteCommand sqliteCommand = dbCon!.CreateCommand();
             sqliteCommand.CommandText =
@@ -77,7 +77,7 @@ namespace FleetServerUtils
                 Username = userName,
                 IsBanned = false,
                 MMR = 0,
-                gamePreference = QueTypePref
+                gamePreference = GameTypePref
             };
         }
 

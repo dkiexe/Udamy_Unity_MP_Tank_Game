@@ -2,10 +2,11 @@
 using FleetServerUtils;
 using System.Data;
 using static BasicFleetServer.Utils.AsyncEventSystem;
+using Newtonsoft.Json;
 
 namespace BasicFleetServer.Operation
 {
-    public enum MM_QueueType
+    public enum MM_GameType
     {
         SOLO,
         TEAMS
@@ -14,20 +15,28 @@ namespace BasicFleetServer.Operation
     public class MatchMakingOperator
     {
         private int MinPlayersToStartMatch;
+        private int MaxTeamCount;
         private MatchMakingData matchMakingData;
 
+        private TeamSplitMatchMaker teamSplit;
+
         // EVENTS.
-        public static event AsyncEventHandler<(string[], string)>? SocketMessageEvent; // (string[] authIDs, string message)
-        public static event Action<int, MM_QueueType, HashSet<MM_User>>? CreateServerEvent; // (int MMR_Group, MM_QueueType queueType, HashSet<MM_User> Waiting Room)
+        public static event AsyncEventHandler<(string[], string)>? UserSocketMessageEvent; // (string[] authIDs, string message)
+        public static event AsyncEventHandler<(int[], string)>? GameServerSocketMessageEvent; // (int[] GameServerIDs, string message)
+        public static event Action<int, MM_GameType, HashSet<MM_User>>? CreateServerEvent; // (int MMR_Group, MM_QueueType queueType, HashSet<MM_User> Waiting Room)
 
         public MatchMakingOperator
             (
                 MatchMakingData matchMakingData,
-                int MinPlayersToStartMatch
+                int MinPlayersToStartMatch,
+                int MaxTeamCount
             )
         {
+            this.MaxTeamCount = MaxTeamCount;
             this.MinPlayersToStartMatch = MinPlayersToStartMatch;
             this.matchMakingData = matchMakingData;
+
+            teamSplit = new TeamSplitMatchMaker(MaxTeamCount);
         }
 
         public async Task MatchMakingUserAssignmentAsync(MM_User connectedUser)
@@ -35,7 +44,7 @@ namespace BasicFleetServer.Operation
             /// ----------------BACKFILLING PROCESS----------------
             // Select the relevant game server dict based on the users game preference, this is used to backfill players into existing rooms if possible.
             
-            Dictionary<int, HashSet<GameServerInstance>> ActiveGameServerDict = GetActiveGameServersByQueueType(connectedUser.gamePreference);
+            Dictionary<int, HashSet<GameServerInstance>> ActiveGameServerDict = GetActiveGameServersByGameType(connectedUser.gamePreference);
 
             if (ActiveGameServerDict.TryGetValue(
                 connectedUser.MMR,
@@ -54,7 +63,7 @@ namespace BasicFleetServer.Operation
 
             /// ----------------MATCHMAKING PROCESS----------------
             HashSet<MM_User>? MMR_room = null;
-            Dictionary<int, HashSet<MM_User>> WaitingRoomDict = GetWaitingRoomsByQueueType(connectedUser.gamePreference);
+            Dictionary<int, HashSet<MM_User>> WaitingRoomDict = GetWaitingRoomsByGameType(connectedUser.gamePreference);
 
             if (!WaitingRoomDict.TryGetValue(connectedUser.MMR, out MMR_room))
             {
@@ -74,29 +83,17 @@ namespace BasicFleetServer.Operation
         private async Task BackFillNewUser(GameServerInstance serverInstance, MM_User user)
         {
             serverInstance.Players.Add(user);
-
-            await InvokeEventAsync(
-                SocketMessageEvent!,
-                this,
-                (
-                    [user.authID],
-                    MSG_Translator.ConstructNetworkMessage
-                    (
-                        "CONNECT",
-                        [serverInstance.GameIP, serverInstance.GamePort.ToString()]
-                    )
-                )
-            );
+            await InvokeUserMessageEvent([user.authID], "CONNECT", [serverInstance.GameIP, serverInstance.GamePort.ToString()]);
         }
 
         public void RemoveUserFromMatchMaking(MM_User user)
         {
             int UserMMR = user.MMR;
-            MM_QueueType userQueuePref = user.gamePreference;
+            MM_GameType userGamePref = user.gamePreference;
 
-            Dictionary<int, HashSet<MM_User>> WaitingRoomDict = GetWaitingRoomsByQueueType(userQueuePref);
+            Dictionary<int, HashSet<MM_User>> WaitingRoomDict = GetWaitingRoomsByGameType(userGamePref);
 
-            Dictionary<int, HashSet<GameServerInstance>> ActiveGameServerDict = GetActiveGameServersByQueueType(userQueuePref);
+            Dictionary<int, HashSet<GameServerInstance>> ActiveGameServerDict = GetActiveGameServersByGameType(userGamePref);
 
             if (!WaitingRoomDict[UserMMR].Remove(user))
             {
@@ -114,53 +111,91 @@ namespace BasicFleetServer.Operation
         {
             // {_(!)_} ISSUE HERE FIX LATER: SERVER MAY TAKE MORE PLAYERS THAN ITS LIMIT HERE, BY TAKING THE WHOLE WAITING ROOM!.
             int MMR = newGameServer.GAME_MMR;
-            MM_QueueType gameType = newGameServer.GameType;
+            MM_GameType gameType = newGameServer.GameType;
 
-            Dictionary<int, HashSet<MM_User>> WaitingRooms = GetWaitingRoomsByQueueType(gameType);
+            Dictionary<int, HashSet<MM_User>> WaitingRooms = GetWaitingRoomsByGameType(gameType);
 
             HashSet<MM_User> MMR_room = WaitingRooms[MMR];
 
-            Dictionary<int, HashSet<GameServerInstance>> ActiveGameServerDict = GetActiveGameServersByQueueType(newGameServer.GameType);
+            Dictionary<int, HashSet<GameServerInstance>> ActiveGameServerDict = GetActiveGameServersByGameType(newGameServer.GameType);
 
             if (!ActiveGameServerDict.TryAdd(MMR, new HashSet<GameServerInstance> { newGameServer }))
             {
                 ActiveGameServerDict[MMR].Add(newGameServer);
             }
 
-            await InvokeEventAsync(
-                SocketMessageEvent!,
-                this,
-                (
-                    MMR_room.Select(x => x.authID).ToArray(),
-                    MSG_Translator.ConstructNetworkMessage
-                    (
-                        "CONNECT",
-                        [newGameServer.GameIP, newGameServer.GamePort.ToString()]
-                    )
-                )
+            TCP_MatchData MatchData = teamSplit.AssignTeams(gameType, MMR_room);
+
+            await InvokeGameServerMessageEvent // Informing gameServers of teams assignment.
+            (
+                [newGameServer.GameServerID],
+                "MATCHDATA",
+                [JsonConvert.SerializeObject(MatchData)]
             );
+
+            await InvokeUserMessageEvent // Informing users of their new server assignment.
+            (
+                MMR_room.Select(x => x.authID).ToArray(),
+                "CONNECT",
+                [newGameServer.GameIP, newGameServer.GamePort.ToString()]
+            );
+
             newGameServer.Players = MMR_room;
             matchMakingData.InTransit.UnionWith(MMR_room);
             MMR_room.Clear();
         }
-        
-        private Dictionary<int, HashSet<MM_User>> GetWaitingRoomsByQueueType(MM_QueueType queueType)
+
+        public async Task InvokeGameServerMessageEvent(int[] GameServerIDs, string cmd, string[] arguments)
         {
-            return queueType switch
+            await InvokeEventAsync
+            (
+                GameServerSocketMessageEvent!,
+                this,
+                (
+                    GameServerIDs,
+                    MSG_Translator.ConstructNetworkMessage
+                    (
+                        cmd,
+                        arguments
+                    )
+                )
+            );
+        }
+
+        public async Task InvokeUserMessageEvent(string[] authIDs, string cmd, string[] arguments)
+        {
+            await InvokeEventAsync
+            (
+                UserSocketMessageEvent!,
+                this,
+                (
+                    authIDs,
+                    MSG_Translator.ConstructNetworkMessage
+                    (
+                        cmd,
+                        arguments
+                    )
+                )
+            );
+        }
+        
+        private Dictionary<int, HashSet<MM_User>> GetWaitingRoomsByGameType(MM_GameType GamePref)
+        {
+            return GamePref switch
             {
-                MM_QueueType.SOLO => matchMakingData.WaitingRoomsSolo,
-                MM_QueueType.TEAMS => matchMakingData.WaitingRoomsTeams,
-                _ => throw new ArgumentException($"Invalid game preference: {queueType}")
+                MM_GameType.SOLO => matchMakingData.WaitingRoomsSolo,
+                MM_GameType.TEAMS => matchMakingData.WaitingRoomsTeams,
+                _ => throw new ArgumentException($"Invalid game preference: {GamePref}")
             };
         }
 
-        private Dictionary<int, HashSet<GameServerInstance>> GetActiveGameServersByQueueType(MM_QueueType queueType)
+        private Dictionary<int, HashSet<GameServerInstance>> GetActiveGameServersByGameType(MM_GameType GamePref)
         {
-            return queueType switch
+            return GamePref switch
             {
-                MM_QueueType.SOLO => matchMakingData.ActiveGameServerRoomsSolos,
-                MM_QueueType.TEAMS => matchMakingData.ActiveGameServerRoomsTeams,
-                _ => throw new ArgumentException($"Invalid game preference: {queueType}")
+                MM_GameType.SOLO => matchMakingData.ActiveGameServerRoomsSolos,
+                MM_GameType.TEAMS => matchMakingData.ActiveGameServerRoomsTeams,
+                _ => throw new ArgumentException($"Invalid game preference: {GamePref}")
             };
         }
     }

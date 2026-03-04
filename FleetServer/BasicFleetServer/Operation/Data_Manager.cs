@@ -11,6 +11,8 @@ namespace BasicFleetServer.Operation
     {
         private const int MinPlayersToStartMatch = 2;
 
+        private const int MaxTeamCount = 4;
+
         private FleetApplicationData fleetAppdata;
 
         public DataBaseManager dbManager;
@@ -22,8 +24,6 @@ namespace BasicFleetServer.Operation
         private MatchMakingOperator matchMakingOperator;
 
         // EVENTS
-        public static event AsyncEventHandler<(string, string)>? bannedClientConnectedEvent; // (string authID, string message)
-
         public static event AsyncEventHandler<string>? DropUserClientEvent;
 
         public static event AsyncEventHandler<int>? DropServerClientEvent;
@@ -39,7 +39,7 @@ namespace BasicFleetServer.Operation
             newUserConnectEvent += RegisterNewUser;
             newGameServerConnectEvent += RegisterNewServer;
             userDisconnectEvent += UnRegisterUser;
-            serverDisconnectEvent += UnRegisterServer;
+            gameServerDisconnectEvent += UnRegisterServer;
             CreateServerEvent += GenerateGameServer;
 
             // Data Initialization.
@@ -56,58 +56,49 @@ namespace BasicFleetServer.Operation
             matchMakingOperator = new MatchMakingOperator
                 (
                     matchMakingData,
-                    MinPlayersToStartMatch
+                    MinPlayersToStartMatch,
+                    MaxTeamCount
                 );
         }
         public async Task RegisterNewUser(object _, string[] eventData)
         {
             string authID = eventData[0];
             string UserName = eventData[1];
-            MM_QueueType QueTypePref;
+            MM_GameType GameTypePref;
 
 
             if (!int.TryParse(eventData[2], out int gamePrefInt))
             {
-                await InvokeEventAsync
-                (
-                    DropUserClientEvent!,
-                    this,
-                    authID
-                );
+                await InvokeDropUserEvent(authID);
                 return;
             }
 
             try
             {
-                QueTypePref = Enum.GetValues<MM_QueueType>()[gamePrefInt];
+                GameTypePref = Enum.GetValues<MM_GameType>()[gamePrefInt];
             }
             catch (IndexOutOfRangeException)
             {
-                await InvokeEventAsync
-                (
-                    DropUserClientEvent!,
-                    this,
-                    authID
-                );
+                await InvokeDropUserEvent(authID);
                 return;
             }
 
-            MM_User connectedUser = await dbManager.ReadPlayerInfoByAuthID(authID, UserName, QueTypePref);
+            MM_User connectedUser = await dbManager.ReadPlayerInfoByAuthID(authID, UserName, GameTypePref);
             matchMakingData.ALL_ConnectedUsers[authID] = connectedUser;
 
             // Handle Banned Users.
             if (connectedUser.IsBanned)
             {
-                await InvokeEventAsync
-                (
-                    bannedClientConnectedEvent!,
-                    this,
+                await matchMakingOperator.InvokeUserMessageEvent
                     (
-                        connectedUser.authID,
-                        MSG_Translator.ConstructNetworkMessage("BANNED", ["INF"]) // {_(!)_} Currently banned players are banned permanently.
-                    )
-                );
+                        [connectedUser.authID],
+                        "BANNED",
+                        ["INF"]
+                    );
+                await InvokeDropUserEvent(authID);
+                return;
             }
+            
             // Attempting game assignment for the user.
             await matchMakingOperator.MatchMakingUserAssignmentAsync(connectedUser);
         }
@@ -121,12 +112,7 @@ namespace BasicFleetServer.Operation
                 ))
             {
                 Console.WriteLine("\n[!@!] Unrecognised server tried to add itself to fleet, dropped.");
-                await InvokeEventAsync
-                (
-                    DropServerClientEvent!,
-                    this,
-                    GameServerID
-                );
+                await InvokeDropServerEvent(GameServerID);
                 return;
             }
 
@@ -167,7 +153,7 @@ namespace BasicFleetServer.Operation
             }
         }
 
-        public void GenerateGameServer(int MMR, MM_QueueType queueType, HashSet<MM_User> waitingRoom)
+        public void GenerateGameServer(int MMR, MM_GameType queueType, HashSet<MM_User> waitingRoom)
         {
             if (ServerCounter < fleetAppdata.maxServerCount)
             {
@@ -196,6 +182,26 @@ namespace BasicFleetServer.Operation
             }
         }
 
+        public async Task InvokeDropUserEvent(string authID)
+        {
+            await InvokeEventAsync
+            (
+                DropUserClientEvent!,
+                this,
+                authID
+            );
+        }
+
+        public async Task InvokeDropServerEvent(int serverID)
+        {
+            await InvokeEventAsync
+            (
+                DropServerClientEvent!,
+                this,
+                serverID
+            );
+        }
+
         public async Task StopAllServers()
         {
             foreach (GameServerInstance serverInstance in matchMakingData.ALL_ConnectedGameServers.Values)
@@ -209,7 +215,7 @@ namespace BasicFleetServer.Operation
             newUserConnectEvent -= RegisterNewUser;
             newGameServerConnectEvent -= RegisterNewServer;
             userDisconnectEvent -= UnRegisterUser;
-            serverDisconnectEvent -= UnRegisterServer;
+            gameServerDisconnectEvent -= UnRegisterServer;
             CreateServerEvent -= GenerateGameServer;
             ValueTask exitTask1 = dbManager.DisposeAsync();
             Task exitTask2 = StopAllServers();

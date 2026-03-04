@@ -8,13 +8,15 @@ using UnityEngine;
 public class NetworkServer : IDisposable
 {
     /// <summary>
-    /// This class is a logic class that gets initalized by the HostGameManager and handles additional server side
+    /// This class is a logic class that gets initalized by the HostGameManager and ServerGameManager and handles server side
     /// logic through event subscriptions to the NetworkManager, from this class we can control client approvals, 
     /// client disconnects and even set up logic to to be runned as soon as the server starts.
     /// </summary>
     private NetworkManager networkManager;
 
     public event Action<string> OnClientLeft; // (authID)
+
+    public event Action<UserData> OnClientConnected;
 
     // Dictionary UGS server id to a UGS authintication id.
     private Dictionary<ulong, string> clientNetworkID_TO_AuthID = new Dictionary<ulong, string>();
@@ -62,6 +64,7 @@ public class NetworkServer : IDisposable
         response.Approved = true; // Approving all connections for now
         response.Position = SpawnPoint.GetRandomSpawnPos(); // setting a random spawn position for the player
         response.CreatePlayerObject = true; // let the network manager create a player object for the connection
+        OnClientConnected?.Invoke(userData);
     }
     
     private void OnNetworkReady()
