@@ -7,17 +7,15 @@ namespace BasicFleetServer.Utils
 {
     public class Team
     {
-        public required int TeamID { get; set; }
-        public required List<string> Players { get; set; }
+        public required int TeamID;
+        public required List<string> Players;
     }
 
     public class TCP_MatchData
     {
         public int maxTeamSize;
         public int gameType;
-        public required List<Team> Teams { get; set; }
-
-        public int teamCount => Teams.Count;
+        public required List<Team> Teams;
     }
 
     public class TeamSplitMatchMaker
@@ -56,7 +54,7 @@ namespace BasicFleetServer.Utils
                         break;
 
                     case MM_GameType.TEAMS:
-                        if (MatchData.teamCount < maxTeamCount)
+                        if (MatchData.Teams.Count < maxTeamCount)
                         {
                             Team newTeam = new Team
                             {
@@ -67,7 +65,7 @@ namespace BasicFleetServer.Utils
                             continue;
                         }
 
-                        MatchData.Teams[i % MatchData.teamCount].Players.Add(user.authID);
+                        MatchData.Teams[i % MatchData.Teams.Count].Players.Add(user.authID);
                         break;
 
                     default:

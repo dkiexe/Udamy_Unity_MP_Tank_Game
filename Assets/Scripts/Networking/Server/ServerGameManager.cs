@@ -7,6 +7,7 @@ using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Assets.Scripts.Networking.Server.Services;
+using System.Threading;
 
 public class ServerGameManager : IDisposable
 {
@@ -24,6 +25,8 @@ public class ServerGameManager : IDisposable
 
     private TCP_MatchData matchData;
 
+    private CancellationTokenSource ShutDownCancelSource;
+
     public ServerGameManager(
         string serverIP,
         int serverPort,  // ServerPort -> Is a port that is used for the game to run on
@@ -35,7 +38,12 @@ public class ServerGameManager : IDisposable
         this.serverPort = serverPort;
         this.serverID = serverID;
         this.networkManager = networkManager;
+        
         networkServer = new NetworkServer(networkManager);
+        tcp_MatchMakingServer = new TCP_MatchMakingServer();
+        ShutDownCancelSource = new CancellationTokenSource();
+
+        tcp_MatchMakingServer.OnMatchDataUpdate += UpdateMatchData;
 
         networkServer.OnClientLeft += HandleClientLeave;
         networkServer.OnClientConnected += HandleClientConnected;
@@ -50,11 +58,11 @@ public class ServerGameManager : IDisposable
             string address = transport.ConnectionData.Address;
             ushort port = transport.ConnectionData.Port;
 
-            tcp_MatchMakingServer = new TCP_MatchMakingServer();
-
-            matchData = await tcp_MatchMakingServer.LogInAsync(serverID); // login to match MakingServers as GameServer.
+            matchData = await tcp_MatchMakingServer.LogInAsync(serverID, ShutDownCancelSource.Token); // login to match MakingServers as GameServer.
 
             _ = tcp_MatchMakingServer.HeartBeat(); // keeps server alive 
+
+            _ = tcp_MatchMakingServer.ListenToCommands(ShutDownCancelSource.Token);
 
             Debug.Log("\n =============================== ");
             Debug.Log("\n Server started successfull");
@@ -76,8 +84,17 @@ public class ServerGameManager : IDisposable
         connectedUsers.Add(user);
         string authID = user.userAuthId;
 
-        Team team = GetTeamByUserId(authID); // {_(!)_} Possible Issue Here
-        Debug.Log($"{team.TeamID}");
+        Team team = GetTeamByUserId(authID);
+
+        // {_(!)_} Error checking remove later.
+        if (team == null)
+        {
+            Debug.Log($"Team Not Found for user {authID}");
+        }
+        else
+        {
+            Debug.Log($"{team.TeamID}");
+        }
     }
     
     public Team GetTeamByUserId(string userId)
@@ -87,29 +104,45 @@ public class ServerGameManager : IDisposable
             );
     }
 
+    private void UpdateMatchData(TCP_MatchData matchData) 
+    { 
+        this.matchData = matchData; 
+        Debug.Log("GOT AN UPDATE"); // {_(!)_} Error checking remove later.
+    }
+
     public async void StopGameServer(string reason)
     {
         // send a message to the matchmaking server that the server is shutting down so it can update its records and stop sending players to this server.
-        await tcp_MatchMakingServer.LogOutAsync(serverID, reason);
+        await tcp_MatchMakingServer.LogOutAsync(serverID, reason, ShutDownCancelSource.Token);
         Application.Quit();
     }
 
     private async void HandleClientLeave(string authID)
     {
+        // {_(!)_} Error checking remove later.
+        Debug.Log("Trying to remove player with authID: " + authID);
+        
         // remove player from the match team assignment.
         GetTeamByUserId(authID).Players.Remove(authID);
 
         // remove user from the connected users hash.
         connectedUsers.RemoveWhere(user => user.userAuthId == authID);
 
+        // {_(!)_} Error checking remove later.
+        Debug.Log("Removed player with authID: " + authID);
+
         // send a message to the matchmaking server that the user has disconnected so it can update its records and allow the user to rejoin later.
-        await tcp_MatchMakingServer.msgUserDisconnect(authID);
+        await tcp_MatchMakingServer.msgUserDisconnect(authID, ShutDownCancelSource.Token);
     }
 
     public void Dispose()
     {
+        tcp_MatchMakingServer.OnMatchDataUpdate -= UpdateMatchData;
         networkServer.OnClientLeft -= HandleClientLeave;
         networkServer.OnClientConnected -= HandleClientConnected;
+        ShutDownCancelSource.Cancel();
+        ShutDownCancelSource.Dispose();
+        tcp_MatchMakingServer?.Dispose();
         networkServer?.Dispose();
     }
 }

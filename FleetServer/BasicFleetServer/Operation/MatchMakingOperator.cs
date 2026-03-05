@@ -83,6 +83,16 @@ namespace BasicFleetServer.Operation
         private async Task BackFillNewUser(GameServerInstance serverInstance, MM_User user)
         {
             serverInstance.Players.Add(user);
+
+            // {_(!)_} ISSUE HERE COMPLETE TEAM REASSIGNMENT HAPPENS ON EVERY BACKFILL, FIX LATER.
+            TCP_MatchData MatchData = teamSplit.AssignTeams(serverInstance.GameType, serverInstance.Players);
+            await InvokeGameServerMessageEvent // Informing gameServers of a new team assignment.
+            (
+                [serverInstance.GameServerID],
+                "MATCHDATAUPDATE",
+                [JsonConvert.SerializeObject(MatchData)]
+            );
+
             await InvokeUserMessageEvent([user.authID], "CONNECT", [serverInstance.GameIP, serverInstance.GamePort.ToString()]);
         }
 

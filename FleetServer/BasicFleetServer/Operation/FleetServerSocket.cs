@@ -363,6 +363,12 @@ namespace BasicFleetServer.Operation
         {
             // Read length (4 bytes)
             byte[] lengthBuffer = await ReadExactAsync(stream, 4, CancelToken);
+
+            if (lengthBuffer == Array.Empty<byte>())
+            {
+                throw new OperationCanceledException(); // Treat as disconnection
+            }
+
             int messageLength = BitConverter.ToInt32(lengthBuffer, 0);
 
             // safety check for message length to prevent potential DoS attacks with extremely large messages.
