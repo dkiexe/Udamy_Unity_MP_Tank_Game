@@ -53,7 +53,7 @@ public class ClientGameManager : IDisposable
         SceneManager.LoadScene(MenuSceneName);
     }
 
-    public void StartClient()
+    public void StartClient(GameQueue gameQueuePref = GameQueue.Solo)
     {
         // making a new user data object to then convert to json and send to the server.
         UserData userData = new UserData
@@ -105,11 +105,13 @@ public class ClientGameManager : IDisposable
     public async Task StartMatchmakerClientAsync(
         TMP_Text queueStatusText,
         TMP_Text queueTimerText,
-        TMP_Text findMatchButtonText
+        TMP_Text findMatchButtonText,
+        bool TeamQueueEnabled
         )
     {
         bool MMResult = await mmUser.StartMatchmakingUserAsync(
             AuthenticationService.Instance.PlayerId,
+            TeamQueueEnabled,
             queueStatusText,
             queueTimerText,
             findMatchButtonText
@@ -117,7 +119,7 @@ public class ClientGameManager : IDisposable
 
         if (MMResult)
         {
-            StartClient();
+            StartClient(TeamQueueEnabled ? GameQueue.Team : GameQueue.Solo);
         }
     }
 
