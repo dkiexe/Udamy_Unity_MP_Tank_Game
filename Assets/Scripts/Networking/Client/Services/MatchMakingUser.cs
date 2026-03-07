@@ -19,6 +19,7 @@ public class MatchMakingUser
 
     public async Task<bool> StartMatchmakingUserAsync(
         string authID,
+        bool TeamQueueEnabled,
         TMP_Text queueStatusText,
         TMP_Text queueTimerText,
         TMP_Text findMatchButtonText
@@ -52,7 +53,9 @@ public class MatchMakingUser
 
         QueueTimerCorutine = ClientSingelton.Instance.StartCoroutine(TimeUtils.QueueTimer(queueTimerText));
 
-        NetworkOperationResult NOP_Login = await MatchMakingClient.LogInAsync(authID, userName,MM_cancelSource.Token);
+        int QueueType = TeamQueueEnabled ? 1 : 0;
+
+        NetworkOperationResult NOP_Login = await MatchMakingClient.LogInAsync(authID, userName, QueueType, MM_cancelSource.Token);
 
         if (!NOP_Login.success)
         {

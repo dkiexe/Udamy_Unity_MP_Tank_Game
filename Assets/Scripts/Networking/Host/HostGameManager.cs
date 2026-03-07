@@ -37,7 +37,7 @@ public class HostGameManager : IDisposable
 
     public NetworkServer networkServer { get; private set; }
 
-    public async Task StartRelayHostAsync()
+    public async Task StartRelayHostAsync(bool isPrivate)
     {
         // requesting a relay allocation from UGS with an X amount of max connections
         try
@@ -65,7 +65,7 @@ public class HostGameManager : IDisposable
         try
         {
             CreateLobbyOptions lobbyOptions = new CreateLobbyOptions();
-            lobbyOptions.IsPrivate = false;
+            lobbyOptions.IsPrivate = isPrivate;
             lobbyOptions.Data = new Dictionary<string, DataObject>() 
             {
                 {

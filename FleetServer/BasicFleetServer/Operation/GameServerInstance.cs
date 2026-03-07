@@ -1,3 +1,4 @@
+using BasicFleetServer.Utils;
 using FleetServerUtils;
 using System.Diagnostics;
 
@@ -10,8 +11,11 @@ namespace BasicFleetServer.Operation
         public string GameIP { get; private set; }
         public int GamePort { get; private set; }
         public int GAME_MMR { get; private set; }
-
+        public MM_GameType GameType { get; private set; }
+        
         public HashSet<MM_User> Players = new HashSet<MM_User>();
+
+        public TCP_MatchData? MatchData;
 
         private string pathToExE;
 
@@ -19,12 +23,13 @@ namespace BasicFleetServer.Operation
 
         public bool isFull => Players.Count > MaxPlayers;
 
-        public GameServerInstance(int ID, int MMR, string IP, int Port, string pathToExE)
+        public GameServerInstance(int ID, int MMR, string IP, int Port, string pathToExE, MM_GameType queueType)
         {
             GAME_MMR = MMR;
             GameServerID = ID;
             GameIP = IP;
             GamePort = Port;
+            GameType = queueType;
 
             this.pathToExE = pathToExE;
         }
@@ -34,7 +39,7 @@ namespace BasicFleetServer.Operation
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
                 FileName = pathToExE,
-                Arguments = $"-ip {GameIP} -port {GamePort}",
+                Arguments = $"-ip {GameIP} -port {GamePort} -id {GameServerID}",
                 UseShellExecute = true,
                 CreateNoWindow = false,
 

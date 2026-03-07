@@ -36,7 +36,13 @@ public class GameInfo
     public GameQueue gameQueue;
 
     public string ToMultiplayQueue()
+    // This method is shallowly copyed from course and is only used for UGS matchmaking services.
     {
-        return "";
+        return gameQueue switch 
+        {
+            GameQueue.Solo => "solo-queue",
+            GameQueue.Team => "team-queue",
+            _ => "solo-queue"
+        };
     }
 }

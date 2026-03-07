@@ -13,6 +13,8 @@ public class MainMenuScript : MonoBehaviour
     [SerializeField] private Button ClientButton;
     [SerializeField] private Button LobbiesButton;
     [SerializeField] private Button LanButton;
+    [SerializeField] private Toggle TeamQueueToggle;
+    [SerializeField] private Toggle PrivateHostToggle;
 
     private void Start()
     {
@@ -25,7 +27,7 @@ public class MainMenuScript : MonoBehaviour
     public async void StartRelayHost()
     {
         SetButtonsActive(false, true);
-        await HostSingelton.Instance.GameManager.StartRelayHostAsync();
+        await HostSingelton.Instance.GameManager.StartRelayHostAsync(PrivateHostToggle.isOn);
         SetButtonsActive(true, true);
     }
 
@@ -42,7 +44,8 @@ public class MainMenuScript : MonoBehaviour
         await ClientSingelton.Instance.GameManager.StartMatchmakerClientAsync(
             queueStatusText, 
             queueTimerText,
-            findMatchButtonText
+            findMatchButtonText,
+            TeamQueueToggle.isOn
             );
         SetButtonsActive(true);
     }

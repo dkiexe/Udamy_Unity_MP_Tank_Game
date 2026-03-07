@@ -7,7 +7,7 @@ namespace BasicFleetServer
     {
         private FleetApplicationData fleetAppdata;
 
-        private GS_Manager gsManager;
+        private Data_Manager data_Manager;
 
         private FleetServerSocket UserListnerSocket;
 
@@ -17,7 +17,7 @@ namespace BasicFleetServer
         {
             this.fleetAppdata = fleetAppdata;
 
-            gsManager = new GS_Manager(fleetAppdata);
+            data_Manager = new Data_Manager(fleetAppdata);
 
             UserListnerSocket = new FleetServerSocket(fleetAppdata.UserCommPort, SocketType.ForUsers);
 
@@ -46,7 +46,7 @@ namespace BasicFleetServer
 
         public async ValueTask DisposeAsync()
         {
-            Task exitTask1 = gsManager.DisposeAsync().AsTask();
+            Task exitTask1 = data_Manager.DisposeAsync().AsTask();
             Task exitTask2 = UserListnerSocket.DisposeAsync().AsTask();
             Task exitTask3 = GameServerListnerSocket.DisposeAsync().AsTask();
             await Task.WhenAll([exitTask1, exitTask2, exitTask3]);
