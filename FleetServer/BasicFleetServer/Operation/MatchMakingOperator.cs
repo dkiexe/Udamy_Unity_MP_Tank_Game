@@ -129,7 +129,14 @@ namespace BasicFleetServer.Operation
                 {
                     foreach (GameServerInstance server in ActiveGameServerList)
                     {
-                        if (server.Players.Remove(user)) break;
+                        if (server.Players.Remove(user))
+                        {
+                            foreach(Team team in server.MatchData!.Teams)
+                            {
+                                if (team.Players.Remove(user.authID)) break;
+                            }
+                            break; 
+                        }
                     }
                 }
             }

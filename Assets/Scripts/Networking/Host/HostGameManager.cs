@@ -27,13 +27,13 @@ public class HostGameManager : IDisposable
 
     private Allocation allocation;
 
-    private string joinCode;
-
     private string lobbyId;
 
     private const int maxConn = 20;
 
     private const string gameSceneName = "Game";
+
+    public string JoinCode { get; private set; }
 
     public NetworkServer networkServer { get; private set; }
 
@@ -53,7 +53,7 @@ public class HostGameManager : IDisposable
         // requesting a join code from UGS from our UGS allocation.
         try
         {
-            joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+            JoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
         }
         catch (Exception e)
         {
@@ -71,7 +71,7 @@ public class HostGameManager : IDisposable
                 {
                     "JoinCode", new DataObject(
                         visibility : DataObject.VisibilityOptions.Member, // this visibility makes sure that this DataObject can be read only if you are a member of the lobby.
-                        value : joinCode
+                        value : JoinCode
                         )
                 }
             };
