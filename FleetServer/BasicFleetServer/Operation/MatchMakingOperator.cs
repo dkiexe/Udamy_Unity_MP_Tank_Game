@@ -84,13 +84,31 @@ namespace BasicFleetServer.Operation
         {
             serverInstance.Players.Add(user);
 
-            // {_(!)_} ISSUE HERE COMPLETE TEAM REASSIGNMENT HAPPENS ON EVERY BACKFILL, FIX LATER.
-            TCP_MatchData MatchData = teamSplit.AssignTeams(serverInstance.GameType, serverInstance.Players);
+            switch (serverInstance.GameType)
+            {
+                case MM_GameType.SOLO:
+                    teamSplit.MatchDataUpdateSolos
+                        (
+                            serverInstance.Players.Count, 
+                            serverInstance.MatchData!, 
+                            user
+                        );
+                    break;
+                case MM_GameType.TEAMS:
+                    teamSplit.MatchDataUpdateTeams
+                        (
+                            serverInstance.Players.Count,
+                            serverInstance.MatchData!,
+                            user
+                        );
+                    break;
+            }
+            
             await InvokeGameServerMessageEvent // Informing gameServers of a new team assignment.
             (
                 [serverInstance.GameServerID],
                 "MATCHDATAUPDATE",
-                [JsonConvert.SerializeObject(MatchData)]
+                [JsonConvert.SerializeObject(serverInstance.MatchData)]
             );
 
             await InvokeUserMessageEvent([user.authID], "CONNECT", [serverInstance.GameIP, serverInstance.GamePort.ToString()]);
@@ -134,13 +152,13 @@ namespace BasicFleetServer.Operation
                 ActiveGameServerDict[MMR].Add(newGameServer);
             }
 
-            TCP_MatchData MatchData = teamSplit.AssignTeams(gameType, MMR_room);
+            newGameServer.MatchData = teamSplit.AssignTeams(gameType, MMR_room);
 
             await InvokeGameServerMessageEvent // Informing gameServers of teams assignment.
             (
                 [newGameServer.GameServerID],
                 "MATCHDATA",
-                [JsonConvert.SerializeObject(MatchData)]
+                [JsonConvert.SerializeObject(newGameServer.MatchData)]
             );
 
             await InvokeUserMessageEvent // Informing users of their new server assignment.

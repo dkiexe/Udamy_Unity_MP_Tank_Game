@@ -340,7 +340,6 @@ namespace BasicFleetServer.Operation
                 }
 
                 client.Dispose();
-                Console.WriteLine("Client disconnected"); // {_(!)_} For testing purposes
             }
         }
 

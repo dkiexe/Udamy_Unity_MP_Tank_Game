@@ -85,16 +85,6 @@ public class ServerGameManager : IDisposable
         string authID = user.userAuthId;
 
         Team team = GetTeamByUserId(authID);
-
-        // {_(!)_} Error checking remove later.
-        if (team == null)
-        {
-            Debug.Log($"Team Not Found for user {authID}");
-        }
-        else
-        {
-            Debug.Log($"{team.TeamID}");
-        }
     }
     
     public Team GetTeamByUserId(string userId)
@@ -106,8 +96,7 @@ public class ServerGameManager : IDisposable
 
     private void UpdateMatchData(TCP_MatchData matchData) 
     { 
-        this.matchData = matchData; 
-        Debug.Log("GOT AN UPDATE"); // {_(!)_} Error checking remove later.
+        this.matchData = matchData;
     }
 
     public async void StopGameServer(string reason)
@@ -119,17 +108,11 @@ public class ServerGameManager : IDisposable
 
     private async void HandleClientLeave(string authID)
     {
-        // {_(!)_} Error checking remove later.
-        Debug.Log("Trying to remove player with authID: " + authID);
-        
         // remove player from the match team assignment.
         GetTeamByUserId(authID).Players.Remove(authID);
 
         // remove user from the connected users hash.
         connectedUsers.RemoveWhere(user => user.userAuthId == authID);
-
-        // {_(!)_} Error checking remove later.
-        Debug.Log("Removed player with authID: " + authID);
 
         // send a message to the matchmaking server that the user has disconnected so it can update its records and allow the user to rejoin later.
         await tcp_MatchMakingServer.msgUserDisconnect(authID, ShutDownCancelSource.Token);

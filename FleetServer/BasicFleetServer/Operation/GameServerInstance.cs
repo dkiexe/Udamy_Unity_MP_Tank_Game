@@ -1,3 +1,4 @@
+using BasicFleetServer.Utils;
 using FleetServerUtils;
 using System.Diagnostics;
 
@@ -11,8 +12,10 @@ namespace BasicFleetServer.Operation
         public int GamePort { get; private set; }
         public int GAME_MMR { get; private set; }
         public MM_GameType GameType { get; private set; }
-
+        
         public HashSet<MM_User> Players = new HashSet<MM_User>();
+
+        public TCP_MatchData? MatchData;
 
         private string pathToExE;
 

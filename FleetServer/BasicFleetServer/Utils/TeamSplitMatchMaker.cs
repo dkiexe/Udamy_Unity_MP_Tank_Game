@@ -37,7 +37,7 @@ namespace BasicFleetServer.Utils
 
             HashSet<MM_User> userAssignmentCopy = new HashSet<MM_User>(userAssignment);
 
-            for (int i = 0; i < userAssignment.Count; i++) 
+            for (int i = 0; i < userAssignment.Count; i++)
             {
                 MM_User user = userAssignmentCopy.First();
                 userAssignmentCopy.Remove(user);
@@ -45,35 +45,44 @@ namespace BasicFleetServer.Utils
                 switch (gameType)
                 {
                     case MM_GameType.SOLO:
-                        Team soloTeam = new Team
-                        {
-                            TeamID = i,
-                            Players = new List<string>() { user.authID },
-                        };
-                        MatchData.Teams.Add(soloTeam);
+                        MatchDataUpdateSolos(i, MatchData, user);
                         break;
 
                     case MM_GameType.TEAMS:
-                        if (MatchData.Teams.Count < maxTeamCount)
-                        {
-                            Team newTeam = new Team
-                            {
-                                TeamID = i,
-                                Players = new List<string>() { user.authID },
-                            };
-                            MatchData.Teams.Add(newTeam);
-                            continue;
-                        }
-
-                        MatchData.Teams[i % MatchData.Teams.Count].Players.Add(user.authID);
+                        MatchDataUpdateTeams(i, MatchData, user);
                         break;
 
                     default:
                         break;
                 }
             }
-            
             return MatchData;
+        }
+        public void MatchDataUpdateSolos(int TeamID, TCP_MatchData MatchData, MM_User user)
+        {
+            Team soloTeam = new Team
+            {
+                TeamID = TeamID,
+                Players = new List<string>() { user.authID },
+            };
+            MatchData.Teams.Add(soloTeam);
+        }
+
+        public void MatchDataUpdateTeams(int TeamID, TCP_MatchData MatchData, MM_User user)
+        {
+            if (MatchData.Teams.Count < maxTeamCount)
+            {
+                Team newTeam = new Team
+                {
+                    TeamID = TeamID,
+                    Players = new List<string>() { user.authID },
+                };
+                MatchData.Teams.Add(newTeam);
+            }
+            else
+            {
+                MatchData.Teams[TeamID % MatchData.Teams.Count].Players.Add(user.authID);
+            }
         }
     }
 }
