@@ -1,8 +1,4 @@
 <!-- UNITY CODE ASSIST INSTRUCTIONS START -->
 - Project name: MultiPlayerTanks
-- Unity version: Unity 6000.3.1f1
-- Active game object:
-  - Name: ServerManager
-  - Tag: Untagged
-  - Layer: Default
+- Unity version: Unity 6000.3.10f1
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

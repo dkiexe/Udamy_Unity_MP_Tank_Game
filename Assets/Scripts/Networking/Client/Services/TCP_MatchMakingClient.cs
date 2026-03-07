@@ -131,11 +131,7 @@ public class TCP_MatchMakingClient : IAsyncDisposable
         }
         catch (OperationCanceledException ex)
         {
-            if (MM_cancelToken.IsCancellationRequested) 
-            {
-                msg.Add("MatchMaking Canceled.");
-            }
-            else
+            if (!MM_cancelToken.IsCancellationRequested)
             {
                 msg.Add($"MatchMaking Failed Server Communication Distrupted On Client Side.");
                 Debug.LogWarning(ex);
