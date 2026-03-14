@@ -1,6 +1,7 @@
+using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerColorDisplay : MonoBehaviour
+public class PlayerColorDisplay : NetworkBehaviour
 {
     [Header("References")]
     [SerializeField] private TeamColorLookup teamColorLookup;
@@ -9,22 +10,45 @@ public class PlayerColorDisplay : MonoBehaviour
 
     private void Start()
     {
-        updateColor(0, tankPlayer.TeamID.Value);
-
-        tankPlayer.TeamID.OnValueChanged += updateColor;
+        if (IsServer)
+        {
+            updateColor(0, tankPlayer.TeamID.Value);
+            tankPlayer.TeamID.OnValueChanged += updateColor;
+        }
+        else
+        {
+            updatColor(default, tankPlayer.PlayerColor.Value);
+            tankPlayer.TeamID.OnValueChanged += updateColor;
+        }
     }
 
-    private void updateColor(int _, int newVal) 
+    private void updatColor(Color _, Color newColor)
     {
-        Color teamColor = teamColorLookup.GetTeamColor(newVal);
+        foreach (SpriteRenderer spriteRenderer in playerSpriteComponents)
+        {
+            spriteRenderer.color = newColor;
+        }
+    }
+
+    private void updateColor(int teamValueOld, int teamValueNew) 
+    {
+        Color teamColor = teamColorLookup.GetTeamColor(teamValueNew);
         foreach (SpriteRenderer spriteRenderer in playerSpriteComponents)
         {
             spriteRenderer.color = teamColor;
         }
+        tankPlayer.PlayerColor.Value = teamColor;
     }
 
-    private void OnDestroy()
+    public override void OnDestroy()
     {
-        tankPlayer.TeamID.OnValueChanged -= updateColor;
+        if (IsServer)
+        {
+            tankPlayer.TeamID.OnValueChanged -= updateColor;
+        }
+        else
+        {
+            tankPlayer.TeamID.OnValueChanged -= updateColor;
+        }
     }
 }
