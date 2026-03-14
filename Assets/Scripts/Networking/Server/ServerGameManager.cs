@@ -21,8 +21,6 @@ public class ServerGameManager : IDisposable
 
     private const string gameSceneName = "Game";
 
-    private HashSet<UserData> connectedUsers = new HashSet<UserData>();
-
     private TCP_MatchData matchData;
 
     private CancellationTokenSource ShutDownCancelSource;
@@ -81,10 +79,10 @@ public class ServerGameManager : IDisposable
 
     private void HandleClientConnected(UserData user)
     {
-        connectedUsers.Add(user);
         string authID = user.userAuthId;
 
         Team team = GetTeamByUserId(authID);
+        user.teamId = team.TeamID;
     }
     
     public Team GetTeamByUserId(string userId)
@@ -110,9 +108,6 @@ public class ServerGameManager : IDisposable
     {
         // remove player from the match team assignment.
         GetTeamByUserId(authID).Players.Remove(authID);
-
-        // remove user from the connected users hash.
-        connectedUsers.RemoveWhere(user => user.userAuthId == authID);
 
         // send a message to the matchmaking server that the user has disconnected so it can update its records and allow the user to rejoin later.
         await tcp_MatchMakingServer.msgUserDisconnect(authID, ShutDownCancelSource.Token);

@@ -25,6 +25,7 @@ public class UserData
     /// </summary>
     public string userName;
     public string userAuthId;
+    public int teamId = -1;
     public GameInfo userGamePreferences;
 }
 
