@@ -20,6 +20,7 @@ public class TankPlayer : NetworkBehaviour
     [SerializeField] private Color OwnerMinimapColor = Color.blue;
 
     public NetworkVariable<FixedString32Bytes> PlayerName = new NetworkVariable<FixedString32Bytes>();
+    public NetworkVariable<int> TeamID = new NetworkVariable<int>();
 
     public static event Action<TankPlayer> OnPlayerSpawned;
     public static event Action<TankPlayer> OnPlayerDespawned;
@@ -49,6 +50,7 @@ public class TankPlayer : NetworkBehaviour
                 );
             }
             PlayerName.Value = userData.userName;
+            TeamID.Value = userData.teamId;
             OnPlayerSpawned?.Invoke(this);
         }
 

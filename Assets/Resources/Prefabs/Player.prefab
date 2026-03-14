@@ -15480,6 +15480,7 @@ GameObject:
   - component: {fileID: 6504460670812366864}
   - component: {fileID: 5268473624189418709}
   - component: {fileID: 8673600044611137361}
+  - component: {fileID: 3180816867059526175}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -15635,6 +15636,8 @@ MonoBehaviour:
         byte0027: 0
         byte0028: 0
         byte0029: 0
+  TeamID:
+    m_InternalValue: 0
 --- !u!114 &3714463008691125884
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15939,6 +15942,23 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &3180816867059526175
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6408323548908524066}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e76414cd95838f4287f7d29ff98d4ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerColorDisplay
+  teamColorLookup: {fileID: 11400000, guid: eab09d7039c97a94daeaafe91d87c4f1, type: 2}
+  tankPlayer: {fileID: 7279947872153785021}
+  playerSpriteComponents:
+  - {fileID: 3218210705840007766}
+  - {fileID: 3799169396312883802}
 --- !u!1 &7613400706177228403
 GameObject:
   m_ObjectHideFlags: 0
