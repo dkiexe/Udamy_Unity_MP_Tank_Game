@@ -8,7 +8,7 @@ public class PlayerColorDisplay : NetworkBehaviour
     [SerializeField] private TankPlayer tankPlayer;
     [SerializeField] private SpriteRenderer[] playerSpriteComponents;
 
-    private void Start()
+    public override void OnNetworkSpawn()
     {
         if (IsServer)
         {
@@ -17,12 +17,12 @@ public class PlayerColorDisplay : NetworkBehaviour
         }
         else
         {
-            updatColor(default, tankPlayer.PlayerColor.Value);
-            tankPlayer.TeamID.OnValueChanged += updateColor;
+            updateColor(default, tankPlayer.PlayerColor.Value);
+            tankPlayer.PlayerColor.OnValueChanged += updateColor;
         }
     }
 
-    private void updatColor(Color _, Color newColor)
+    private void updateColor(Color _, Color newColor)
     {
         foreach (SpriteRenderer spriteRenderer in playerSpriteComponents)
         {
@@ -48,7 +48,7 @@ public class PlayerColorDisplay : NetworkBehaviour
         }
         else
         {
-            tankPlayer.TeamID.OnValueChanged -= updateColor;
+            tankPlayer.PlayerColor.OnValueChanged -= updateColor;
         }
     }
 }

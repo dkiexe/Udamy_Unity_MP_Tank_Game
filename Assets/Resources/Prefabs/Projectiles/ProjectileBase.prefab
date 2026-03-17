@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6882840270168287762}
   - component: {fileID: 2459104125648245615}
   - component: {fileID: 1989851209157690554}
+  - component: {fileID: -5312445800110289342}
   - component: {fileID: 7802787892244646322}
   - component: {fileID: 5756511931871312968}
   m_Layer: 6
@@ -98,6 +99,18 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &-5312445800110289342
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3776938865246945272}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 285691a6d836cb2429aadf8d97f584a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Projectile
 --- !u!114 &7802787892244646322
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -123,3 +136,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ffee589d66312145b9879abb5f54f6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DestroySelfOnContact
+  projectile: {fileID: -5312445800110289342}
