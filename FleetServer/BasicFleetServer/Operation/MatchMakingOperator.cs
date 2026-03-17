@@ -83,26 +83,8 @@ namespace BasicFleetServer.Operation
         private async Task BackFillNewUser(GameServerInstance serverInstance, MM_User user)
         {
             serverInstance.Players.Add(user);
-
-            switch (serverInstance.GameType)
-            {
-                case MM_GameType.SOLO:
-                    teamSplit.MatchDataUpdateSolos
-                        (
-                            serverInstance.Players.Count, 
-                            serverInstance.MatchData!, 
-                            user
-                        );
-                    break;
-                case MM_GameType.TEAMS:
-                    teamSplit.MatchDataUpdateTeams
-                        (
-                            serverInstance.Players.Count,
-                            serverInstance.MatchData!,
-                            user
-                        );
-                    break;
-            }
+            teamSplit.MatchDataBackFillUser(serverInstance.Players.Count, serverInstance.MatchData!, user);
+            //teamSplit.LogTeamStatus(serverInstance.MatchData!); // {_(!)_} FOR TESTING !
             
             await InvokeGameServerMessageEvent // Informing gameServers of a new team assignment.
             (
@@ -135,10 +117,14 @@ namespace BasicFleetServer.Operation
                             {
                                 if (team.Players.Remove(user.authID)) break;
                             }
-                            break; 
+                            break;
                         }
                     }
                 }
+            }
+            else
+            {
+                if (WaitingRoomDict[UserMMR].Count == 0) WaitingRoomDict.Remove(UserMMR);
             }
         }
 
@@ -161,6 +147,9 @@ namespace BasicFleetServer.Operation
 
             newGameServer.MatchData = teamSplit.AssignTeams(gameType, MMR_room);
 
+            Console.WriteLine("MatchMake");
+            //teamSplit.LogTeamStatus(newGameServer.MatchData!); // {_(!)_} FOR TESTING !
+
             await InvokeGameServerMessageEvent // Informing gameServers of teams assignment.
             (
                 [newGameServer.GameServerID],
@@ -175,7 +164,7 @@ namespace BasicFleetServer.Operation
                 [newGameServer.GameIP, newGameServer.GamePort.ToString()]
             );
 
-            newGameServer.Players = MMR_room;
+            newGameServer.Players = MMR_room.ToHashSet();
             matchMakingData.InTransit.UnionWith(MMR_room);
             MMR_room.Clear();
         }

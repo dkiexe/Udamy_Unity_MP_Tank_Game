@@ -58,7 +58,7 @@ namespace BasicFleetServer.Utils
             }
             return MatchData;
         }
-        public void MatchDataUpdateSolos(int TeamID, TCP_MatchData MatchData, MM_User user)
+        private void MatchDataUpdateSolos(int TeamID, TCP_MatchData MatchData, MM_User user)
         {
             Team soloTeam = new Team
             {
@@ -68,7 +68,7 @@ namespace BasicFleetServer.Utils
             MatchData.Teams.Add(soloTeam);
         }
 
-        public void MatchDataUpdateTeams(int TeamID, TCP_MatchData MatchData, MM_User user)
+        private void MatchDataUpdateTeams(int TeamID, TCP_MatchData MatchData, MM_User user)
         {
             if (MatchData.Teams.Count < maxTeamCount)
             {
@@ -81,7 +81,44 @@ namespace BasicFleetServer.Utils
             }
             else
             {
-                MatchData.Teams[TeamID % MatchData.Teams.Count].Players.Add(user.authID);
+                MatchData.Teams[TeamID % maxTeamCount].Players.Add(user.authID);
+            }
+        }
+
+        public void MatchDataBackFillUser(int TeamID, TCP_MatchData MatchData, MM_User user)
+        {
+            if (MatchData.gameType == 0)
+            {
+                MatchDataUpdateSolos(TeamID, MatchData, user);
+            }
+            else
+            {
+                bool tryAddTeam = true;
+                foreach (Team team in MatchData.Teams)
+                {
+                    if (team.Players.Count == 0)
+                    {
+                        team.Players.Add(user.authID);
+                        tryAddTeam = false;
+                    }
+                }
+                if (tryAddTeam)
+                {
+                    MatchDataUpdateTeams(TeamID, MatchData, user);
+                }
+            }
+        }
+
+        public void LogTeamStatus(TCP_MatchData MatchData) // {_(!)_} BUG! incorrect team assignment when backfilling.
+        {
+            foreach (Team team in MatchData.Teams)
+            {
+                List<string> teamPlayers = new List<string>();
+                foreach (string player in team.Players)
+                {
+                    teamPlayers.Add(player);
+                }
+                Console.WriteLine($"Team ID: {team.TeamID} : Players : [{string.Join(", ", teamPlayers)}]");
             }
         }
     }
