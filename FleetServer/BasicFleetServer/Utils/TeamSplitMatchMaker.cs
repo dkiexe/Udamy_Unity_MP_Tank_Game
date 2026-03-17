@@ -84,5 +84,18 @@ namespace BasicFleetServer.Utils
                 MatchData.Teams[TeamID % MatchData.Teams.Count].Players.Add(user.authID);
             }
         }
+
+        public void LogTeamStatus(TCP_MatchData MatchData) // {_(!)_} BUG! incorrect team assignment when backfilling.
+        {
+            foreach (Team team in MatchData.Teams)
+            {
+                List<string> teamPlayers = new List<string>();
+                foreach (string player in team.Players)
+                {
+                    teamPlayers.Add(player);
+                }
+                Console.WriteLine($"Team ID: {team.TeamID} : Players : [{string.Join(", ", teamPlayers)}]");
+            }
+        }
     }
 }
