@@ -15718,6 +15718,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileLauncherScript
   ShowTopMostFoldoutHeaderGroup: 1
+  tankPlayer: {fileID: 7279947872153785021}
   inputReader: {fileID: 11400000, guid: 06e1e4949a1db534899aa11dbd3fdc86, type: 2}
   wallet: {fileID: 856842355059159909}
   projectileSpawnPoint: {fileID: 7880335000922752450}
@@ -15956,6 +15957,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e76414cd95838f4287f7d29ff98d4ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerColorDisplay
+  ShowTopMostFoldoutHeaderGroup: 1
   teamColorLookup: {fileID: 11400000, guid: eab09d7039c97a94daeaafe91d87c4f1, type: 2}
   tankPlayer: {fileID: 7279947872153785021}
   playerSpriteComponents:

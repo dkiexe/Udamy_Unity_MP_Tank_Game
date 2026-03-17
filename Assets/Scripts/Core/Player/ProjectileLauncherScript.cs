@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 public class ProjectileLauncherScript : NetworkBehaviour
 {
     [Header("References")]
+    [SerializeField] private TankPlayer tankPlayer;
     [SerializeField] private InputReader inputReader;
     [SerializeField] private CoinWallet wallet;
     [SerializeField] private Transform projectileSpawnPoint;
@@ -61,11 +62,17 @@ public class ProjectileLauncherScript : NetworkBehaviour
         if (wallet.TotalCoins.Value < CostToFire) return;
 
         PrimaryFireServerRpc(projectileSpawnPoint.position, projectileSpawnPoint.up);
-        SpawnDummyProjectile(projectileSpawnPoint.position, projectileSpawnPoint.up);
+        
+        SpawnDummyProjectile(
+            projectileSpawnPoint.position, 
+            projectileSpawnPoint.up, 
+            tankPlayer.TeamID.Value
+            );
+        
         timer = 1 / fireRate;
     }
 
-    private void SpawnDummyProjectile(Vector2 spawnPos, Vector3 direction)
+    private void SpawnDummyProjectile(Vector2 spawnPos, Vector3 direction, int TeamID)
     {
         muzzleFlash.SetActive(true);
         muzzleFlashTimer = muzzleFlashDuration;
@@ -80,6 +87,11 @@ public class ProjectileLauncherScript : NetworkBehaviour
 
         // this line insures the player wont shoot itself
         Physics2D.IgnoreCollision(playerCollider, projectileIntance.GetComponent<Collider2D>());
+
+        if (projectileIntance.TryGetComponent<Projectile>(out Projectile projectile))
+        {
+            projectile.Initialise(TeamID);
+        }
 
         if (projectileIntance.TryGetComponent<Rigidbody2D>(out Rigidbody2D RB2D))
         {
@@ -103,10 +115,10 @@ public class ProjectileLauncherScript : NetworkBehaviour
 
         // this line insures the player wont shoot itself
         Physics2D.IgnoreCollision(playerCollider, projectileIntance.GetComponent<Collider2D>());
-
-        if (projectileIntance.TryGetComponent<ContactDamageDealer>(out ContactDamageDealer damageDealerObj))
+        
+        if (projectileIntance.TryGetComponent<Projectile>(out Projectile projectile))
         {
-            damageDealerObj.SetOwner(this.OwnerClientId);
+            projectile.Initialise(tankPlayer.TeamID.Value);
         }
         
         if (projectileIntance.TryGetComponent<Rigidbody2D>(out Rigidbody2D RB2D))
@@ -114,14 +126,14 @@ public class ProjectileLauncherScript : NetworkBehaviour
             RB2D.linearVelocity = RB2D.transform.up * ProjectileSpeed;
         }
         
-        SpwanDummyProjectileClientRpc(spawnPos, direction);
+        SpwanDummyProjectileClientRpc(spawnPos, direction, tankPlayer.TeamID.Value);
     }
 
     [ClientRpc] // this is how the server updates its clients after a RPC call.
-    private void SpwanDummyProjectileClientRpc(Vector2 spawnPos, Vector3 direction)
+    private void SpwanDummyProjectileClientRpc(Vector2 spawnPos, Vector3 direction, int TeamID)
     {
         if (IsOwner) return;
-        SpawnDummyProjectile(spawnPos, direction);
+        SpawnDummyProjectile(spawnPos, direction, TeamID);
     }
 
 
