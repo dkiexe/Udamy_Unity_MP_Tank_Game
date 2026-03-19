@@ -6,24 +6,31 @@ using UnityEngine;
 public class LeaderBoardEntityDisplay : MonoBehaviour
 {
     [SerializeField] private TMP_Text displayText;
-    [SerializeField] private Color selfPlayerColor;
+    private FixedString32Bytes displayName;
 
-    private FixedString32Bytes playerName;
-
+    public int TeamID { get; private set; }
     public ulong ClientID { get; private set; }
     public int Coins { get; private set; }
 
-    public void Initialise(ulong clientID, FixedString32Bytes playerName, int coins)
+    public void Initialise(ulong clientID, FixedString32Bytes displayName, int coins)
     {
         ClientID = clientID;
-        this.playerName = playerName;
+        this.displayName = displayName;
 
-        if (clientID == NetworkManager.Singleton.LocalClientId)
-        {
-            displayText.color = selfPlayerColor;
-        }
-        
         updateCoins(coins);
+    }
+
+    public void Initialise(int teamID, FixedString32Bytes displayName, int coins)
+    {
+        TeamID = teamID;
+        this.displayName = displayName;
+
+        updateCoins(coins);
+    }
+
+    public void SetColor(Color color)
+    {
+        displayText.color = color;
     }
 
     public void updateCoins(int coins)
@@ -34,6 +41,6 @@ public class LeaderBoardEntityDisplay : MonoBehaviour
 
     public void updateText()
     {
-        displayText.text = $"{transform.GetSiblingIndex() + 1}. {playerName} ({Coins})";
+        displayText.text = $"{transform.GetSiblingIndex() + 1}. {displayName} ({Coins})";
     }
 }

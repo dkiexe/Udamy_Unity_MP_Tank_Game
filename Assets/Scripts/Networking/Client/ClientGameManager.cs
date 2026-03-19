@@ -32,6 +32,8 @@ public class ClientGameManager : IDisposable
 
     private const string MenuSceneName = "Menu";
 
+    public UserData UserDataObj { get; private set; }
+
     public async Task<bool> InitAsync()
     {
         // initalize unity services, this must be done every time when wanting to use unity services.
@@ -53,17 +55,17 @@ public class ClientGameManager : IDisposable
         SceneManager.LoadScene(MenuSceneName);
     }
 
-    public void StartClient(GameQueue gameQueuePref = GameQueue.Solo)
+    public void StartClient()
     {
-        // making a new user data object to then convert to json and send to the server.
-        UserData userData = new UserData
+        UserData userData;
+
+        if (UserDataObj == null)
         {
-            userName = PlayerPrefs.GetString(
-                NameSelector.PLAYERNAMEKEY,
-                "Guest"
-                ),
-            userAuthId = AuthenticationService.Instance.PlayerId
-        };
+            // making a simple user data object to then convert to json and send to the server.
+            // if a custom one was not specified.
+            userData = GenerateUserData();
+        }
+        else userData = UserDataObj;
 
         // converting the user class to a json object for sirialization.
         string payload = JsonUtility.ToJson(userData);
@@ -119,12 +121,32 @@ public class ClientGameManager : IDisposable
 
         if (MMResult)
         {
-            StartClient(TeamQueueEnabled ? GameQueue.Team : GameQueue.Solo);
+            UserDataObj = GenerateUserData(gameQueue: TeamQueueEnabled? GameQueue.Team: GameQueue.Solo);
+            StartClient();
         }
+    }
+
+    public UserData GenerateUserData(Map map = default, GameMode gameMode = default, GameQueue gameQueue = default)
+    {
+        return new UserData
+        {
+            userName = PlayerPrefs.GetString(
+                NameSelector.PLAYERNAMEKEY,
+                "Guest"
+            ),
+            userAuthId = AuthenticationService.Instance.PlayerId,
+            userGamePreferences = new GameInfo()
+            {
+                map = map,
+                gameMode = gameMode,
+                gameQueue = gameQueue
+            }
+        };
     }
 
     public void Disconnect()
     {
+        UserDataObj = null;
         networkClient.Disconnect();
     }
 

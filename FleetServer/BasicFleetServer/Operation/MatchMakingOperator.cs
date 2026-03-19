@@ -147,7 +147,6 @@ namespace BasicFleetServer.Operation
 
             newGameServer.MatchData = teamSplit.AssignTeams(gameType, MMR_room);
 
-            Console.WriteLine("MatchMake");
             //teamSplit.LogTeamStatus(newGameServer.MatchData!); // {_(!)_} FOR TESTING !
 
             await InvokeGameServerMessageEvent // Informing gameServers of teams assignment.

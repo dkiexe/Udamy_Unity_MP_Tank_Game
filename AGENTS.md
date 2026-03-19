@@ -2,7 +2,7 @@
 - Project name: MultiPlayerTanks
 - Unity version: Unity 6000.3.10f1
 - Active game object:
-  - Name: ServerProjectile
+  - Name: LeaderBoardEntity
   - Tag: Untagged
-  - Layer: Projectile
+  - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

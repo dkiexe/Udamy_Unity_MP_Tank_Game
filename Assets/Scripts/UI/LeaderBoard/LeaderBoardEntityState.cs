@@ -14,6 +14,7 @@ public struct LeaderBoardEntityState : INetworkSerializable, IEquatable<LeaderBo
     /// NOTE : Every data you sync through a network variable has to be a struct it cant be a class with references.
 
     public ulong ClientID;
+    public int TeamID;
     public FixedString32Bytes PlayerName;
     public int Coins;
 
@@ -26,6 +27,7 @@ public struct LeaderBoardEntityState : INetworkSerializable, IEquatable<LeaderBo
         /// "ref" keywords are needed because We want NGO to write the incoming data 
         /// directly into the actual fields of the struct, Using ref ensures that happens.
         serializer.SerializeValue(ref ClientID);
+        serializer.SerializeValue(ref TeamID);
         serializer.SerializeValue(ref PlayerName);
         serializer.SerializeValue(ref Coins);
     }
@@ -34,7 +36,10 @@ public struct LeaderBoardEntityState : INetworkSerializable, IEquatable<LeaderBo
     {
         /// This method allows unity's NGO to know the difference between LeaderBoardEntityState
         /// objects sent over the network, This is a crucial part if you need to work with networklists
-        return ClientID == other.ClientID && PlayerName.Equals(other.PlayerName) && Coins == other.Coins;
+        return ClientID == other.ClientID 
+            && PlayerName.Equals(other.PlayerName) 
+            && TeamID == other.TeamID
+            && Coins == other.Coins;
     }
 
 }
