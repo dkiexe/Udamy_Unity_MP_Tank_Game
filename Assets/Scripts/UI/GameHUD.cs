@@ -20,7 +20,7 @@ public class GameHUD : NetworkBehaviour
 
         if (IsHost)
         {
-            JoinCodeSynced.Value = HostSingelton.Instance.GameManager.JoinCode;
+            JoinCodeSynced.Value = HostSingelton.Instance.GameManager.JoinCode ?? "LAN GAME";
         }
     }
 

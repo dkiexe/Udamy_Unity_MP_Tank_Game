@@ -32,7 +32,7 @@ public class ClientGameManager : IDisposable
 
     private const string MenuSceneName = "Menu";
 
-    public UserData UserDataObj { get; private set; }
+    public UserData UserDataObj { get; set; }
 
     public async Task<bool> InitAsync()
     {
@@ -57,18 +57,12 @@ public class ClientGameManager : IDisposable
 
     public void StartClient()
     {
-        UserData userData;
-
-        if (UserDataObj == null)
-        {
-            // making a simple user data object to then convert to json and send to the server.
-            // if a custom one was not specified.
-            userData = GenerateUserData();
-        }
-        else userData = UserDataObj;
+        // making a simple user data object to then convert to json and send to the server.
+        // if a custom one was not specified.
+        UserDataObj = UserDataObj ?? GenerateUserData();
 
         // converting the user class to a json object for sirialization.
-        string payload = JsonUtility.ToJson(userData);
+        string payload = JsonUtility.ToJson(UserDataObj);
 
         // converting the json string to a byte array to be sent as a connection payload.
 
@@ -126,7 +120,7 @@ public class ClientGameManager : IDisposable
         }
     }
 
-    public UserData GenerateUserData(Map map = default, GameMode gameMode = default, GameQueue gameQueue = default)
+    public static UserData GenerateUserData(Map map = default, GameMode gameMode = default, GameQueue gameQueue = default)
     {
         return new UserData
         {

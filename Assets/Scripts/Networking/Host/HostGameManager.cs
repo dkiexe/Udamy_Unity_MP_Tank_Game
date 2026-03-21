@@ -98,14 +98,7 @@ public class HostGameManager : IDisposable
         networkServer = new NetworkServer(NetworkManager.Singleton);
         
         // making a new user data object to then convert to json and send to the server. ( we do this because a host is also a client )f
-        UserData userData = new UserData
-        {
-            userName = PlayerPrefs.GetString(
-                NameSelector.PLAYERNAMEKEY,
-                "Guest"
-                ),
-            userAuthId = AuthenticationService.Instance.PlayerId
-        };
+        UserData userData = ClientSingelton.Instance.GameManager.UserDataObj = ClientGameManager.GenerateUserData();
 
         // converting the user class to a json object for sirialization.
         string payload = JsonUtility.ToJson(userData);
@@ -139,14 +132,7 @@ public class HostGameManager : IDisposable
         networkServer = new NetworkServer(NetworkManager.Singleton);
 
         // making a new user data object to then convert to json and send to the server. ( we do this because a host is also a client )
-        UserData userData = new UserData
-        {
-            userName = PlayerPrefs.GetString(
-                NameSelector.PLAYERNAMEKEY,
-                "Guest"
-                ),
-            userAuthId = AuthenticationService.Instance.PlayerId
-        };
+        UserData userData = ClientSingelton.Instance.GameManager.UserDataObj = ClientGameManager.GenerateUserData();
 
         // converting the user class to a json object for sirialization.
         string payload = JsonUtility.ToJson(userData);
