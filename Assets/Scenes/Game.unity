@@ -7169,6 +7169,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CoinCounter
   ShowTopMostFoldoutHeaderGroup: 1
+  gameGoalText: {fileID: 77154673}
   CoinsToWin: 30
 --- !u!1 &2003468561
 GameObject:
