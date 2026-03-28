@@ -14,6 +14,10 @@ namespace BasicFleetServer.Operation
 
     public class MatchMakingOperator
     {
+        // CONST.
+        public static int IncreaseMMR_FromWin = 10;
+
+        // FIELDS.
         private int MinPlayersToStartMatch;
         private int MaxTeamCount;
         private MatchMakingData matchMakingData;

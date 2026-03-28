@@ -39,7 +39,7 @@ namespace BasicFleetServer.Operation
             newUserConnectEvent += RegisterNewUser;
             newGameServerConnectEvent += RegisterNewServer;
             userDisconnectEvent += UnRegisterUser;
-            gameServerDisconnectEvent += UnRegisterServer;
+            gameServerDisconnectEvent += GameServerDisconnectHandle;
             CreateServerEvent += GenerateGameServer;
 
             // Data Initialization.
@@ -133,6 +133,32 @@ namespace BasicFleetServer.Operation
             }
         }
 
+        private async void GameServerDisconnectHandle(int ID, string[] args)
+        {
+            if (args.Length != 0)
+            {
+                string reason = args[1];
+                switch (reason) 
+                {
+                    case "WIN":
+                        {
+                            string winnerAuthID = args[2];
+
+                            if (matchMakingData.ALL_ConnectedUsers.TryGetValue(winnerAuthID, out MM_User? user))
+                            {
+                                await dbManager.UpdatePlayerMMR(winnerAuthID, user.MMR + MatchMakingOperator.IncreaseMMR_FromWin);
+                            }
+                            break;
+                        }
+                    default:
+                        {
+                            break;
+                        }
+                }
+            }
+            UnRegisterServer(ID);
+        }
+
         private void UnRegisterServer(int ID)
         {
             if (matchMakingData.ALL_ConnectedGameServers.TryGetValue(ID, out GameServerInstance? server))
@@ -215,7 +241,7 @@ namespace BasicFleetServer.Operation
             newUserConnectEvent -= RegisterNewUser;
             newGameServerConnectEvent -= RegisterNewServer;
             userDisconnectEvent -= UnRegisterUser;
-            gameServerDisconnectEvent -= UnRegisterServer;
+            gameServerDisconnectEvent -= GameServerDisconnectHandle;
             CreateServerEvent -= GenerateGameServer;
             ValueTask exitTask1 = dbManager.DisposeAsync();
             Task exitTask2 = StopAllServers();
