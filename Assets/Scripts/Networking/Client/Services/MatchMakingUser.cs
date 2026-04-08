@@ -70,7 +70,8 @@ public class MatchMakingUser
 
         if (!NOP_Assignment.success)
         {
-            StopMatchSearch(NOP_Assignment.message[0], queueStatusText, queueTimerText);
+            if (NOP_Assignment.message.Length > 0) StopMatchSearch(NOP_Assignment.message[0], queueStatusText, queueTimerText);
+            
             findMatchButtonText.text = "Find Match!";
             return false;
         }

@@ -88,7 +88,6 @@ namespace BasicFleetServer.Operation
         {
             serverInstance.Players.Add(user);
             teamSplit.MatchDataBackFillUser(serverInstance.Players.Count, serverInstance.MatchData!, user);
-            //teamSplit.LogTeamStatus(serverInstance.MatchData!); // {_(!)_} FOR TESTING !
             
             await InvokeGameServerMessageEvent // Informing gameServers of a new team assignment.
             (
@@ -151,8 +150,6 @@ namespace BasicFleetServer.Operation
 
             newGameServer.MatchData = teamSplit.AssignTeams(gameType, MMR_room);
 
-            //teamSplit.LogTeamStatus(newGameServer.MatchData!); // {_(!)_} FOR TESTING !
-
             await InvokeGameServerMessageEvent // Informing gameServers of teams assignment.
             (
                 [newGameServer.GameServerID],
@@ -170,6 +167,33 @@ namespace BasicFleetServer.Operation
             newGameServer.Players = MMR_room.ToHashSet();
             matchMakingData.InTransit.UnionWith(MMR_room);
             MMR_room.Clear();
+        }
+
+        public async Task TryLooseMatchMaking()
+        {
+            foreach (int LooseMMRLevel in matchMakingData.WaitingRoomsSolo.Keys)
+            {
+                if (matchMakingData.GameServerSpinUpPool.TryGetValue(LooseMMRLevel, out _)) continue; // Skip if we are already trying to spin up a server for this MMR level.
+
+                HashSet<MM_User> MMR_room = matchMakingData.WaitingRoomsSolo[LooseMMRLevel];
+                if (MMR_room.Count >= MinPlayersToStartMatch)
+                {
+                    // Loose Matchmaking suscessful, rasing event to spin up a server!
+                    CreateServerEvent?.Invoke(LooseMMRLevel, MM_GameType.SOLO, MMR_room);
+                }
+            }
+
+            foreach (int LooseMMRLevel in matchMakingData.WaitingRoomsTeams.Keys)
+            {
+                if (matchMakingData.GameServerSpinUpPool.TryGetValue(LooseMMRLevel, out _)) continue; // Skip if we are already trying to spin up a server for this MMR level.
+
+                HashSet<MM_User> MMR_room = matchMakingData.WaitingRoomsTeams[LooseMMRLevel];
+                if (MMR_room.Count >= MinPlayersToStartMatch)
+                {
+                    // Loose Matchmaking suscessful, rasing event to spin up a server!
+                    CreateServerEvent?.Invoke(LooseMMRLevel, MM_GameType.TEAMS, MMR_room);
+                }
+            }
         }
 
         public async Task InvokeGameServerMessageEvent(int[] GameServerIDs, string cmd, string[] arguments)

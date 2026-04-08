@@ -28,6 +28,7 @@ namespace BasicFleetServer
         {
             _ = UserListnerSocket.StartListening(); // start listening fire & forget.
             _ = GameServerListnerSocket.StartListening(); // start listening fire & forget.
+            _ = LooseMatchMakingTimer.Instance.StartIntervalLoop(new CancellationTokenSource()); // start the loose matchmaking timer fire & forget.
 
             while (true)
             {
@@ -49,6 +50,9 @@ namespace BasicFleetServer
             Task exitTask1 = data_Manager.DisposeAsync().AsTask();
             Task exitTask2 = UserListnerSocket.DisposeAsync().AsTask();
             Task exitTask3 = GameServerListnerSocket.DisposeAsync().AsTask();
+            
+            LooseMatchMakingTimer.Instance.StopIntervalLoop();
+            
             await Task.WhenAll([exitTask1, exitTask2, exitTask3]);
         }
     }

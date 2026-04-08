@@ -42,6 +42,8 @@ namespace BasicFleetServer.Operation
             gameServerDisconnectEvent += GameServerDisconnectHandle;
             CreateServerEvent += GenerateGameServer;
 
+            LooseMatchMakingTimer.Instance.IntervalElapsedEvent += LoosenMMR;
+
             // Data Initialization.
             this.fleetAppdata = fleetAppdata;
             LocalIP = UtilsForIP.GetActiveLanIP()!;
@@ -208,6 +210,55 @@ namespace BasicFleetServer.Operation
             }
         }
 
+
+        private async Task LoosenMMR(object _)
+        {
+            Dictionary<int, HashSet<MM_User>> loosenWaitingRoomsSolos = LoosenWaitingRooms(matchMakingData.WaitingRoomsSolo);
+            Dictionary<int, HashSet<MM_User>> loosenWaitingRoomsTeams = LoosenWaitingRooms(matchMakingData.WaitingRoomsTeams);
+            
+            // Override the current waiting rooms with the loosened copy,
+            // this way we can avoid modifying the waiting rooms while the matchmaking operator is trying to assign players to servers.
+
+            matchMakingData.WaitingRoomsSolo = loosenWaitingRoomsSolos;
+            matchMakingData.WaitingRoomsTeams = loosenWaitingRoomsTeams;
+
+            await matchMakingOperator.TryLooseMatchMaking();
+        }
+
+        private Dictionary<int, HashSet<MM_User>> LoosenWaitingRooms(Dictionary<int, HashSet<MM_User>> original)
+        {
+            Dictionary<int, HashSet<MM_User>> newWaitingArrangment = new Dictionary<int, HashSet<MM_User>>();
+            
+            foreach (int MMR_OF_ROOM in original.Keys)
+            {
+                int newMMR = MMR_OF_ROOM - MatchMakingOperator.IncreaseMMR_FromWin;
+
+                if (newMMR < 0)
+                {
+                    if (!newWaitingArrangment.TryAdd(0, original[MMR_OF_ROOM]))
+                    {
+                        newWaitingArrangment[0].UnionWith(original[MMR_OF_ROOM]);
+                    }
+                    continue; // ignoring rooms with MMR 0 or below.
+                }
+
+                HashSet<MM_User> waitingRoom = original[MMR_OF_ROOM];
+
+                if (waitingRoom.Count <= 0) continue; // ignoring empty rooms.
+
+                foreach (MM_User user in waitingRoom)
+                {
+                    user.MMR = newMMR;
+                }
+
+                if (!newWaitingArrangment.TryAdd(newMMR, waitingRoom))
+                {
+                    newWaitingArrangment[newMMR].UnionWith(waitingRoom);
+                }
+            }
+            return newWaitingArrangment;
+        }
+
         public async Task InvokeDropUserEvent(string authID)
         {
             await InvokeEventAsync
@@ -243,6 +294,7 @@ namespace BasicFleetServer.Operation
             userDisconnectEvent -= UnRegisterUser;
             gameServerDisconnectEvent -= GameServerDisconnectHandle;
             CreateServerEvent -= GenerateGameServer;
+            LooseMatchMakingTimer.Instance.IntervalElapsedEvent -= LoosenMMR;
             ValueTask exitTask1 = dbManager.DisposeAsync();
             Task exitTask2 = StopAllServers();
             await Task.WhenAll([ exitTask1.AsTask(), exitTask2 ]);
