@@ -148,7 +148,7 @@ namespace BasicFleetServer.Operation
 
                             if (matchMakingData.ALL_ConnectedUsers.TryGetValue(winnerAuthID, out MM_User? user))
                             {
-                                await dbManager.UpdatePlayerMMR(winnerAuthID, user.MMR + MatchMakingOperator.IncreaseMMR_FromWin);
+                                await dbManager.UpdatePlayerMMR(winnerAuthID, MatchMakingOperator.IncreaseMMR_FromWin);
                             }
                             break;
                         }
