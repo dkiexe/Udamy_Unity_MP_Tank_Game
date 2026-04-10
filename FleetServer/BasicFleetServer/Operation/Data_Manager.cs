@@ -213,49 +213,55 @@ namespace BasicFleetServer.Operation
 
         private async Task LoosenMMR(object _)
         {
-            Dictionary<int, HashSet<MM_User>> loosenWaitingRoomsSolos = LoosenWaitingRooms(matchMakingData.WaitingRoomsSolo);
-            Dictionary<int, HashSet<MM_User>> loosenWaitingRoomsTeams = LoosenWaitingRooms(matchMakingData.WaitingRoomsTeams);
-            
             // Override the current waiting rooms with the loosened copy,
             // this way we can avoid modifying the waiting rooms while the matchmaking operator is trying to assign players to servers.
+            if (matchMakingData.WaitingRoomsSolo.Count >= 2) // atleast 2 MMR players needed to loosen MMR
+            {
+                matchMakingData.WaitingRoomsSolo = LoosenWaitingRooms(matchMakingData.WaitingRoomsSolo);
+            }
 
-            matchMakingData.WaitingRoomsSolo = loosenWaitingRoomsSolos;
-            matchMakingData.WaitingRoomsTeams = loosenWaitingRoomsTeams;
+            if (matchMakingData.WaitingRoomsTeams.Count >= 2) // atleast 2 MMR players needed to loosen MMR
+            {
+                matchMakingData.WaitingRoomsTeams = LoosenWaitingRooms(matchMakingData.WaitingRoomsTeams);
+            }
 
             await matchMakingOperator.TryLooseMatchMaking();
         }
 
         private Dictionary<int, HashSet<MM_User>> LoosenWaitingRooms(Dictionary<int, HashSet<MM_User>> original)
         {
-            Dictionary<int, HashSet<MM_User>> newWaitingArrangment = new Dictionary<int, HashSet<MM_User>>();
+            /// This function creates a new waiting room arrangement with the MMR of all top users reduced by the loosening amount, then returns the new arrangement.
             
-            foreach (int MMR_OF_ROOM in original.Keys)
+            Dictionary<int, HashSet<MM_User>> newWaitingArrangment = new Dictionary<int, HashSet<MM_User>>(original);
+
+            int TopMMR = original.Keys.Max();
+            int ReducedTopMMR = TopMMR - MatchMakingOperator.IncreaseMMR_FromWin;
+
+            if (ReducedTopMMR < 0)
             {
-                int newMMR = MMR_OF_ROOM - MatchMakingOperator.IncreaseMMR_FromWin;
-
-                if (newMMR < 0)
+                if (!newWaitingArrangment.TryAdd(0, original[TopMMR]))
                 {
-                    if (!newWaitingArrangment.TryAdd(0, original[MMR_OF_ROOM]))
-                    {
-                        newWaitingArrangment[0].UnionWith(original[MMR_OF_ROOM]);
-                    }
-                    continue; // ignoring rooms with MMR 0 or below.
-                }
-
-                HashSet<MM_User> waitingRoom = original[MMR_OF_ROOM];
-
-                if (waitingRoom.Count <= 0) continue; // ignoring empty rooms.
-
-                foreach (MM_User user in waitingRoom)
-                {
-                    user.MMR = newMMR;
-                }
-
-                if (!newWaitingArrangment.TryAdd(newMMR, waitingRoom))
-                {
-                    newWaitingArrangment[newMMR].UnionWith(waitingRoom);
+                    newWaitingArrangment[0].UnionWith(original[TopMMR]);
                 }
             }
+
+            HashSet<MM_User> TopMMR_WaitingRoom = original[TopMMR];
+
+            if (TopMMR_WaitingRoom.Count > 0) // ignoring empty rooms.
+            {
+                foreach (MM_User user in TopMMR_WaitingRoom)
+                {
+                    user.MMR = ReducedTopMMR;
+                }
+
+                if (!newWaitingArrangment.TryAdd(ReducedTopMMR, TopMMR_WaitingRoom))
+                {
+                    newWaitingArrangment[ReducedTopMMR].UnionWith(TopMMR_WaitingRoom);
+                }
+
+                newWaitingArrangment.Remove(TopMMR);
+            }
+            
             return newWaitingArrangment;
         }
 
