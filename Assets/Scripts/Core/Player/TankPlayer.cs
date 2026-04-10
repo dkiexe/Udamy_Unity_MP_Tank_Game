@@ -9,6 +9,7 @@ public class TankPlayer : NetworkBehaviour
     [Header("References")]
     [SerializeField] private CinemachineCamera TankCam;
     [SerializeField] private SpriteRenderer MinimapIconSprite;
+    [SerializeField] private SpriteRenderer FacingArrowSprite;
     [SerializeField] private Texture2D gameCrosshair;
     [SerializeField] private AudioSource TankEngineSoundSource;
     [SerializeField] private AudioSource TankTurretSoundSource;
@@ -59,7 +60,8 @@ public class TankPlayer : NetworkBehaviour
         {
             TankCam.Priority = OwnerCamPriority;
             MinimapIconSprite.color = OwnerMinimapColor;
-            
+            FacingArrowSprite.enabled = true;
+
             // Makes the owner's sound sources 2D so it doesn't change based on the player's position/rotation.
             TankEngineSoundSource.spatialBlend = 0f;
             TankTurretSoundSource.spatialBlend = 0f;

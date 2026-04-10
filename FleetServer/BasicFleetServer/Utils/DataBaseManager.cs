@@ -81,6 +81,19 @@ namespace FleetServerUtils
             };
         }
 
+        public async Task UpdatePlayerMMR(string authID, int addedMMR)
+        {
+            SqliteCommand sqliteCommand = dbCon!.CreateCommand();
+            sqliteCommand.CommandText = @"
+                UPDATE PlayerInfo
+                SET PlayerMMR = PlayerMMR + $addedMMR
+                WHERE AuthID = $authID;
+            ";
+            sqliteCommand.Parameters.AddWithValue("$authID", authID);
+            sqliteCommand.Parameters.AddWithValue("$addedMMR", addedMMR);
+            await sqliteCommand.ExecuteNonQueryAsync();
+        }
+
         private void DB_Connect()
         {
             dbCon = new SqliteConnection($"Data Source={dbPath}");
