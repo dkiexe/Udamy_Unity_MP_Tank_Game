@@ -1,8 +1,6 @@
 using System;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.UIElements;
-using static UnityEngine.LowLevelPhysics2D.PhysicsShape;
 
 public class CoinWallet : NetworkBehaviour
 {
@@ -25,6 +23,8 @@ public class CoinWallet : NetworkBehaviour
 
     public NetworkVariable<int> TotalCoins = new NetworkVariable<int>();
 
+    public static event Action<CoinWallet> OnCoinsCollected;
+
     public override void OnNetworkSpawn()
     {
         if (!IsServer) return;
@@ -35,19 +35,14 @@ public class CoinWallet : NetworkBehaviour
         health.OnDie += HandleDie;
     }
 
-    public override void OnNetworkDespawn()
-    {
-        if (!IsServer) return;
-        health.OnDie -= HandleDie;
-    }
-
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.TryGetComponent<Coin>(out Coin CoinComponent))
+        if (collision.TryGetComponent(out Coin CoinComponent))
         {
             int CoinValue = CoinComponent.Collect();
             if (!IsServer) return;
             TotalCoins.Value += CoinValue;
+            OnCoinsCollected?.Invoke(this);
         }
     }
     public void SpendCoins(int Amount)
@@ -91,5 +86,10 @@ public class CoinWallet : NetworkBehaviour
             int numColliders = Physics2D.OverlapCircle(spawnPoint, coinRadius, ContactFilter, results: coinBuffer);
             if (numColliders == 0) return spawnPoint;
         }
+    }
+    public override void OnNetworkDespawn()
+    {
+        if (!IsServer) return;
+        health.OnDie -= HandleDie;
     }
 }

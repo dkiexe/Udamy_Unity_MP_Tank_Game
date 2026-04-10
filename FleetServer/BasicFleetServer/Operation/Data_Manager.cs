@@ -39,8 +39,10 @@ namespace BasicFleetServer.Operation
             newUserConnectEvent += RegisterNewUser;
             newGameServerConnectEvent += RegisterNewServer;
             userDisconnectEvent += UnRegisterUser;
-            gameServerDisconnectEvent += UnRegisterServer;
+            gameServerDisconnectEvent += GameServerDisconnectHandle;
             CreateServerEvent += GenerateGameServer;
+
+            LooseMatchMakingTimer.Instance.IntervalElapsedEvent += LoosenMMR;
 
             // Data Initialization.
             this.fleetAppdata = fleetAppdata;
@@ -133,6 +135,32 @@ namespace BasicFleetServer.Operation
             }
         }
 
+        private async void GameServerDisconnectHandle(int ID, string[] args)
+        {
+            if (args.Length != 0)
+            {
+                string reason = args[1];
+                switch (reason) 
+                {
+                    case "WIN":
+                        {
+                            string winnerAuthID = args[2];
+
+                            if (matchMakingData.ALL_ConnectedUsers.TryGetValue(winnerAuthID, out MM_User? user))
+                            {
+                                await dbManager.UpdatePlayerMMR(winnerAuthID, MatchMakingOperator.IncreaseMMR_FromWin);
+                            }
+                            break;
+                        }
+                    default:
+                        {
+                            break;
+                        }
+                }
+            }
+            UnRegisterServer(ID);
+        }
+
         private void UnRegisterServer(int ID)
         {
             if (matchMakingData.ALL_ConnectedGameServers.TryGetValue(ID, out GameServerInstance? server))
@@ -182,6 +210,61 @@ namespace BasicFleetServer.Operation
             }
         }
 
+
+        private async Task LoosenMMR(object _)
+        {
+            // Override the current waiting rooms with the loosened copy,
+            // this way we can avoid modifying the waiting rooms while the matchmaking operator is trying to assign players to servers.
+            if (matchMakingData.WaitingRoomsSolo.Count >= 2) // atleast 2 MMR players needed to loosen MMR
+            {
+                matchMakingData.WaitingRoomsSolo = LoosenWaitingRooms(matchMakingData.WaitingRoomsSolo);
+            }
+
+            if (matchMakingData.WaitingRoomsTeams.Count >= 2) // atleast 2 MMR players needed to loosen MMR
+            {
+                matchMakingData.WaitingRoomsTeams = LoosenWaitingRooms(matchMakingData.WaitingRoomsTeams);
+            }
+
+            await matchMakingOperator.TryLooseMatchMaking();
+        }
+
+        private Dictionary<int, HashSet<MM_User>> LoosenWaitingRooms(Dictionary<int, HashSet<MM_User>> original)
+        {
+            /// This function creates a new waiting room arrangement with the MMR of all top users reduced by the loosening amount, then returns the new arrangement.
+            
+            Dictionary<int, HashSet<MM_User>> newWaitingArrangment = new Dictionary<int, HashSet<MM_User>>(original);
+
+            int TopMMR = original.Keys.Max();
+            int ReducedTopMMR = TopMMR - MatchMakingOperator.IncreaseMMR_FromWin;
+
+            if (ReducedTopMMR < 0)
+            {
+                if (!newWaitingArrangment.TryAdd(0, original[TopMMR]))
+                {
+                    newWaitingArrangment[0].UnionWith(original[TopMMR]);
+                }
+            }
+
+            HashSet<MM_User> TopMMR_WaitingRoom = original[TopMMR];
+
+            if (TopMMR_WaitingRoom.Count > 0) // ignoring empty rooms.
+            {
+                foreach (MM_User user in TopMMR_WaitingRoom)
+                {
+                    user.MMR = ReducedTopMMR;
+                }
+
+                if (!newWaitingArrangment.TryAdd(ReducedTopMMR, TopMMR_WaitingRoom))
+                {
+                    newWaitingArrangment[ReducedTopMMR].UnionWith(TopMMR_WaitingRoom);
+                }
+
+                newWaitingArrangment.Remove(TopMMR);
+            }
+            
+            return newWaitingArrangment;
+        }
+
         public async Task InvokeDropUserEvent(string authID)
         {
             await InvokeEventAsync
@@ -215,8 +298,9 @@ namespace BasicFleetServer.Operation
             newUserConnectEvent -= RegisterNewUser;
             newGameServerConnectEvent -= RegisterNewServer;
             userDisconnectEvent -= UnRegisterUser;
-            gameServerDisconnectEvent -= UnRegisterServer;
+            gameServerDisconnectEvent -= GameServerDisconnectHandle;
             CreateServerEvent -= GenerateGameServer;
+            LooseMatchMakingTimer.Instance.IntervalElapsedEvent -= LoosenMMR;
             ValueTask exitTask1 = dbManager.DisposeAsync();
             Task exitTask2 = StopAllServers();
             await Task.WhenAll([ exitTask1.AsTask(), exitTask2 ]);

@@ -19,10 +19,10 @@ public class NetworkServer : IDisposable
     public event Action<UserData> OnClientConnected;
 
     // Dictionary UGS server id to a UGS authintication id.
-    private Dictionary<ulong, string> clientNetworkID_TO_AuthID = new Dictionary<ulong, string>();
+    public Dictionary<ulong, string> clientNetworkID_TO_AuthID = new Dictionary<ulong, string>();
 
     // Dictionary UGS authintication id to UserData object.
-    private Dictionary<string, UserData> authID_TO_UserData = new Dictionary<string, UserData>();
+    public Dictionary<string, UserData> authID_TO_UserData = new Dictionary<string, UserData>();
 
     public bool IsServerEmpty => clientNetworkID_TO_AuthID.Count == 0;
 
@@ -97,6 +97,17 @@ public class NetworkServer : IDisposable
             }
         }
         return null;
+    }
+
+    public void DisconnectAllClients()
+    {
+        foreach (ulong clientId in clientNetworkID_TO_AuthID.Keys)
+        {
+            if (clientId == NetworkManager.Singleton.LocalClientId)
+                continue; // don't disconnect host
+
+            NetworkManager.Singleton.DisconnectClient(clientId);
+        }
     }
 
     public void Dispose()

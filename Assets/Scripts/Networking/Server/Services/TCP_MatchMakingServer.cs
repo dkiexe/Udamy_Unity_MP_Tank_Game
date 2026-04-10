@@ -75,9 +75,9 @@ public class TCP_MatchMakingServer : IDisposable
         return matchProperties;
     }
     
-    public async Task LogOutAsync(int GameServerID, string Reason, CancellationToken cancelToken)
+    public async Task LogOutAsync(int GameServerID, string Reason, CancellationToken cancelToken, string args = default)
     {
-        string logoutMessage = $"DEREGISTER|{GameServerID}|{Reason}";
+        string logoutMessage = $"DEREGISTER|{GameServerID}|{Reason}|{args}";
         await TCP_socket.SendTCPMessageAsync(networkDataStream, logoutMessage, cancelToken);
     }
 

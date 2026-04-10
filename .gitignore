@@ -41,6 +41,7 @@
 ExportedObj/
 .consulo/
 *.csproj
+!FleetServer/BasicFleetServer/BasicFleetServer.csproj
 *.unityproj
 *.sln
 *.suo
@@ -115,3 +116,4 @@ obj/
 Library/
 Temp/
 Logs/
+/FleetServer/BasicFleetServer/Properties/

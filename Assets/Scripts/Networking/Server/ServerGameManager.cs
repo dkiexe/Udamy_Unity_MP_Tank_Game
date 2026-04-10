@@ -97,10 +97,11 @@ public class ServerGameManager : IDisposable
         this.matchData = matchData;
     }
 
-    public async void StopGameServer(string reason)
+    public async void StopGameServer(string reason, string winner = default)
     {
         // send a message to the matchmaking server that the server is shutting down so it can update its records and stop sending players to this server.
-        await tcp_MatchMakingServer.LogOutAsync(serverID, reason, ShutDownCancelSource.Token);
+        await tcp_MatchMakingServer.LogOutAsync(serverID, reason, ShutDownCancelSource.Token, winner);
+        await Task.Delay(5000); // Delay to ensure the message is sent before shutting down the server.
         Application.Quit();
     }
 

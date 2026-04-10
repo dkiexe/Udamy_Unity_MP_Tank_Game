@@ -19,7 +19,7 @@ namespace BasicFleetServer.Operation
         public static event AsyncEventHandler<string[]>? newUserConnectEvent; // ( authID, UserName )
         public static event AsyncEventHandler<int>? newGameServerConnectEvent; // ( GameServerID )
         public static event Action<string>? userDisconnectEvent; // (authID)
-        public static event Action<int>? gameServerDisconnectEvent; // ( GameServerID )
+        public static event Action<int, string[]>? gameServerDisconnectEvent; // ( GameServerID, MessageArgs )
 
         // authID to TcpClient object mapping for user connections.
         public Dictionary<string, TcpClient>? UserConnectedClients;
@@ -209,7 +209,7 @@ namespace BasicFleetServer.Operation
 
                 case SocketType.ForGameServers:
                     GameServerConnctedClients!.Remove(networkIdentity.GameServerID!.Value);
-                    gameServerDisconnectEvent?.Invoke(networkIdentity.GameServerID!.Value);
+                    gameServerDisconnectEvent?.Invoke(networkIdentity.GameServerID!.Value, Array.Empty<string>());
                     break;
             }
             await DisposeClient(client);
@@ -222,7 +222,7 @@ namespace BasicFleetServer.Operation
                 case "DEREGISTER":
                     TcpClient Gameserverclient = GameServerConnctedClients![networkIdentity.GameServerID!.Value];
                     CancellationTokenSource CS_GS_client = communicationCancelSources[Gameserverclient]; //communication cancel source gameserver client 
-                    gameServerDisconnectEvent?.Invoke(networkIdentity.GameServerID!.Value);
+                    gameServerDisconnectEvent?.Invoke(networkIdentity.GameServerID!.Value, args);
                     CS_GS_client.Cancel();
                     break;
                 
