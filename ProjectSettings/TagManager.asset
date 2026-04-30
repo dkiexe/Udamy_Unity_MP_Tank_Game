@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - TEMP
+  - ShopUI
   layers:
   - Default
   - TransparentFX

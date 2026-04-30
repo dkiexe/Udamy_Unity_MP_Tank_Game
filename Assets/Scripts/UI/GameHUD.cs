@@ -2,10 +2,30 @@ using TMPro;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameHUD : NetworkBehaviour
 {
     [SerializeField] private TMP_Text privateLobbyJoinCode;
+    public GameObject ShopUI;
+    public HorizontalLayoutGroup ShopItemsHolder;
+
+    private static GameHUD instance;
+
+    public static GameHUD Instance
+    {
+        get
+        {
+            if (instance != null) { return instance; }
+            instance = FindFirstObjectByType<GameHUD>();
+
+            if (instance == null)
+            {
+                return null;
+            }
+            return instance;
+        }
+    }
 
     public NetworkVariable<FixedString32Bytes> JoinCodeSynced = new NetworkVariable<FixedString32Bytes>(
         default,

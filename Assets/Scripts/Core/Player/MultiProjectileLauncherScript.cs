@@ -1,0 +1,150 @@
+using Unity.Netcode;
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+public class MultiProjectileLauncherScript : NetworkBehaviour
+{
+    [Header("References")]
+    [SerializeField] private TankPlayer tankPlayer;
+    [SerializeField] private InputReader inputReader;
+    [SerializeField] private CoinWallet wallet;
+    [SerializeField] private Transform[] projectileSpawnPoints;
+    [SerializeField] private AudioSource shotAudioSource;
+    [SerializeField] private GameObject ServerProjectilePrefab;
+    [SerializeField] private GameObject ClientProjectilePrefab;
+    [SerializeField] private GameObject muzzleFlash;
+    [SerializeField] private Collider2D playerCollider;
+
+    [Header("Settings")]
+    [SerializeField] private float ProjectileSpeed = 5f;
+    [SerializeField] private float fireRate;
+    [SerializeField] private float muzzleFlashDuration;
+    [SerializeField] private int CostToFire = 10;
+
+    private bool isPointerOverUI;
+    private bool shouldFire;
+    private float timer;
+    private float muzzleFlashTimer;
+
+    public override void OnNetworkSpawn()
+    {
+        if (!IsOwner) return;
+        inputReader.PrimaryFireEvent += HandlePrimaryFire;
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        if (!IsOwner) return;
+        inputReader.PrimaryFireEvent -= HandlePrimaryFire;
+    }
+
+    private void Update()
+    {
+        if (muzzleFlashTimer > 0f)
+        {
+            muzzleFlashTimer -= Time.deltaTime;
+
+            if (muzzleFlashTimer <= 0f) muzzleFlash.SetActive(false);
+        }
+
+        if (!IsOwner) return;
+
+        isPointerOverUI = EventSystem.current.IsPointerOverGameObject();
+
+        if (timer > 0) timer -= Time.deltaTime;
+
+        // Given to us by an event
+        if (!shouldFire) return;
+
+        // here we are trusting the client to calculate his time to fire.
+        if (timer > 0) return;
+
+        if (wallet.TotalCoins.Value < CostToFire) return;
+
+        PrimaryFireServerRpc(projectileSpawnPoints);
+
+        SpawnDummyProjectile(
+            projectileSpawnPoints,
+            tankPlayer.TeamID.Value
+            );
+
+        timer = 1 / fireRate;
+    }
+
+    private void SpawnDummyProjectile(Transform[] projectileSpawnPoints, int TeamID)
+    {
+        muzzleFlash.SetActive(true);
+        muzzleFlashTimer = muzzleFlashDuration;
+        shotAudioSource.Play();
+
+        GameObject projectileIntance = Instantiate(
+            ClientProjectilePrefab,
+            position: spawnPos,
+            rotation: Quaternion.identity
+            );
+        projectileIntance.transform.up = direction;
+
+        // this line insures the player wont shoot itself
+        Physics2D.IgnoreCollision(playerCollider, projectileIntance.GetComponent<Collider2D>());
+
+        if (projectileIntance.TryGetComponent<Projectile>(out Projectile projectile))
+        {
+            projectile.Initialise(TeamID);
+        }
+
+        if (projectileIntance.TryGetComponent<Rigidbody2D>(out Rigidbody2D RB2D))
+        {
+            RB2D.linearVelocity = RB2D.transform.up * ProjectileSpeed;
+        }
+    }
+
+    [ServerRpc] // this is how you make Remote Procedure Calls(RPC) to the server.
+    private void PrimaryFireServerRpc(Transform[] projectileSpawnPoints)
+    {
+        if (wallet.TotalCoins.Value < CostToFire) return;
+
+        wallet.SpendCoins(CostToFire);
+
+        foreach (Transform pt in projectileSpawnPoints)
+        {
+            GameObject projectileIntance = Instantiate(
+            ServerProjectilePrefab,
+            position: pt.position,
+            rotation: pt.rotation
+            );
+            projectileIntance.transform.up = pt.up;
+
+            // this line insures the player wont shoot itself
+            Physics2D.IgnoreCollision(playerCollider, projectileIntance.GetComponent<Collider2D>());
+
+            if (projectileIntance.TryGetComponent<Projectile>(out Projectile projectile))
+            {
+                projectile.Initialise(tankPlayer.TeamID.Value);
+            }
+
+            if (projectileIntance.TryGetComponent<Rigidbody2D>(out Rigidbody2D RB2D))
+            {
+                RB2D.linearVelocity = RB2D.transform.up * ProjectileSpeed;
+            }
+        }
+        SpwanDummyProjectileClientRpc(projectileSpawnPoints, tankPlayer.TeamID.Value);
+    }
+
+    [ClientRpc] // this is how the server updates its clients after a RPC call.
+    private void SpwanDummyProjectileClientRpc(Transform[] projectileSpawnPoints, int TeamID)
+    {
+        if (IsOwner) return;
+        SpawnDummyProjectile(projectileSpawnPoints, TeamID);
+    }
+
+
+    private void HandlePrimaryFire(bool shouldFire)
+    {
+        if (shouldFire)
+        {
+            // Ignore click if pointer is over UI.
+            if (isPointerOverUI) return;
+        }
+        this.shouldFire = shouldFire;
+    }
+}

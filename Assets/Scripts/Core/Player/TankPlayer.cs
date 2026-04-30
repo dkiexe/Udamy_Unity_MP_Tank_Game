@@ -23,6 +23,10 @@ public class TankPlayer : NetworkBehaviour
     public NetworkVariable<FixedString32Bytes> PlayerName = new NetworkVariable<FixedString32Bytes>();
     public NetworkVariable<int> TeamID = new NetworkVariable<int>();
     public NetworkVariable<Color> PlayerColor = new NetworkVariable<Color>(value : default);
+    public NetworkVariable<UpgradeStage> CurrentUpgradeStage = new NetworkVariable<UpgradeStage>
+        (
+            value: UpgradeStage.SingleShot
+        );
 
     public static event Action<TankPlayer> OnPlayerSpawned;
     public static event Action<TankPlayer> OnPlayerDespawned;
